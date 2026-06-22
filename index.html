@@ -13,21 +13,20 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #1a4d2e; background: linear-gradient(135deg, #133b22 0%, #1a4d2e 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .login-card { background: white; width: 100%; max-width: 420px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow: hidden; animation: fadeInUp 0.5s ease; }
-        .card-header { background: var(--primary); padding: 25px; text-align: center; color: white; position: relative; }
+        .login-card { background: white; width: 100%; max-width: 420px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow: hidden; }
+        .card-header { background: var(--primary); padding: 25px; text-align: center; color: white; }
         .card-header h2 { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
         .card-header p { font-size: 12px; opacity: 0.9; margin-top: 5px; background: #e9b824; color: #133b22; display: inline-block; padding: 3px 10px; border-radius: 20px; font-weight: bold; }
         .card-body { padding: 30px 25px; }
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 8px; }
-        .form-control { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; transition: all 0.3s ease; outline: none; color: #4a5568; }
-        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(11, 102, 35, 0.1); }
-        select.form-control { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234a5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; padding-right: 40px; }
-        .btn-submit { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 6px rgba(11, 102, 35, 0.2); }
+        .form-control { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; outline: none; color: #4a5568; }
+        .form-control:focus { border-color: var(--primary); }
+        select.form-control { cursor: pointer; }
+        .btn-submit { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 6px rgba(11, 102, 35, 0.2); }
         .btn-submit:hover { background: var(--primary-dark); }
-        .btn-submit:disabled { background: #a0aec0; cursor: not-allowed; box-shadow: none; }
+        .btn-submit:disabled { background: #a0aec0; cursor: not-allowed; }
         .footer-text { text-align: center; margin-top: 25px; font-size: 11px; color: #718096; line-height: 1.5; border-top: 1px solid #edf2f7; padding-top: 15px; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -75,16 +74,17 @@
 </div>
 
 <script>
-    // URL Web App Google Apps Script Versi 1.2 milik Bapak
+    // Link utama Web App Google Apps Script Versi 1.2 milik Bapak
     const URL_DATABASE = "https://script.google.com/macros/s/AKfycbyyq2-PBFrD4w5tDTElvi-niGCQF-ajlZ2X0eLwtUSjvpBZih18UttphnVpFfkpS89eDw/exec";
 
-    // Cek di awal: Jika HP ini sudah pernah login sukses, langsung lempar ke menu sholat.html tanpa harus login lagi
-    window.addEventListener('DOMContentLoaded', () => {
+    // Cek otomatis saat halaman dimuat
+    window.addEventListener('DOMContentLoaded', function() {
         if (localStorage.getItem("siswa_sholat_session")) {
             window.location.href = "sholat.html";
         }
-    </script>
-// Fungsi memanggil daftar nama murid berdasarkan tab kelas di Google Sheet
+    });
+
+    // Fungsi mengambil daftar nama murid berdasarkan tab kelas di Google Sheet
     function muatSiswaOtomatis() {
         const kelas = document.getElementById("txtPilihKelas").value;
         const selectNama = document.getElementById("txtPilihNama");
@@ -99,28 +99,28 @@
         selectNama.innerHTML = '<option value="">🔄 Menghubungkan ke database...</option>';
         selectNama.disabled = true;
 
-        fetch(`${URL_DATABASE}?action=ambil_siswa&kelas=${kelas}`)
-        .then(res => res.json())
-        .then(data => {
+        fetch(URL_DATABASE + "?action=ambil_siswa&kelas=" + kelas)
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
             if (data.length === 0) {
-                selectNama.innerHTML = '<option value="">⚠️ Lembar DataMurid kosong / salah nama tab</option>';
+                selectNama.innerHTML = '<option value="">⚠️ Lembar data kosong / salah nama tab</option>';
                 return;
             }
             let htmlOptions = '<option value="">-- Pilih Nama Anda --</option>';
-            data.forEach(item => {
-                htmlOptions += `<option value="${item.nim}">${item.nama}</option>`;
+            data.forEach(function(item) {
+                htmlOptions += '<option value="' + item.nim + '">' + item.nama + '</option>';
             });
             selectNama.innerHTML = htmlOptions;
             selectNama.disabled = false;
             selectNama.style.backgroundColor = "#ffffff";
         })
-        .catch(err => {
+        .catch(function(err) {
             alert("Gagal mengunduh daftar nama siswa. Periksa koneksi internet Anda.");
             selectNama.innerHTML = '<option value="">⚠️ Gagal memuat data siswa</option>';
         });
     }
 
-    // Fungsi pencocokan password dan penyimpanan sesi di HP siswa
+    // Fungsi verifikasi login murid dan simpan data permanen di HP
     function eksekusiLoginSiswa() {
         const kelas = document.getElementById("txtPilihKelas").value;
         const selectNamaEl = document.getElementById("txtPilihNama");
@@ -137,20 +137,21 @@
         btn.innerText = "⏳ Memverifikasi Sandi Murid...";
         btn.disabled = true;
 
-        // Kirim verifikasi login aman ke backend Google Sheets
+        const dataKirim = {
+            action: "cek_login",
+            kelas: kelas,
+            nim: nim,
+            password: password
+        };
+
         fetch(URL_DATABASE, {
             method: "POST",
             mode: "no-cors",
             headers: { "Content-Type": "text/plain" },
-            body: JSON.stringify({
-                action: "cek_login",
-                kelas: kelas,
-                nim: nim,
-                password: password
-            })
+            body: JSON.stringify(dataKirim)
         })
-        .then(() => {
-            // Karena bypass 'no-cors' sukses masuk, data lokal langsung dikunci di HP siswa
+        .then(function() {
+            // Mengunci data identitas lokal di memori HP siswa
             const payloadSesi = {
                 nim: nim,
                 nama: namaText,
@@ -158,10 +159,10 @@
             };
             localStorage.setItem("siswa_sholat_session", JSON.stringify(payloadSesi));
             
-            alert(`Selamat Datang, ${namaText}! Login sukses dan identitas telah dikunci di HP ini.`);
+            alert("Selamat Datang, " + namaText + "! Login sukses dan perangkat Anda telah dikunci.");
             window.location.href = "sholat.html";
         })
-        .catch(err => {
+        .catch(function(err) {
             alert("Gangguan koneksi atau sandi salah. Silakan ulangi.");
             btn.innerText = "Masuk Aplikasi ➔";
             btn.disabled = false;
