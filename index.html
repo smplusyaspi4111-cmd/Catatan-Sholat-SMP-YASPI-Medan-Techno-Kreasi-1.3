@@ -23,13 +23,7 @@
         .form-control { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; outline: none; color: #4a5568; }
         .form-control:focus { border-color: var(--primary); }
         
-        /* TOMBOL KENDALI BARU (SIMPAN & RESET) DI ATAS TOMBOL MASUK */
-        .action-flex { display: flex; gap: 10px; margin-bottom: 20px; margin-top: -5px; }
-        .btn-mini { flex: 1; padding: 10px; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; background: #f8fafc; transition: 0.2s; color: #4a5568; }
-        .btn-mini:hover { background: #edf2f7; border-color: #cbd5e0; }
-        .btn-active-save { background: #e6f4ea; color: #137333; border-color: #c4e5cb; }
-        
-        .btn-submit { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 6px rgba(11, 102, 35, 0.2); }
+        .btn-submit { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 6px rgba(11, 102, 35, 0.2); margin-top: 5px; }
         .btn-submit:hover { background: var(--primary-dark); }
         .btn-submit:disabled { background: #a0aec0; cursor: not-allowed; }
         .footer-text { text-align: center; margin-top: 25px; font-size: 11px; color: #718096; line-height: 1.5; border-top: 1px solid #edf2f7; padding-top: 15px; }
@@ -68,12 +62,6 @@
             <input type="password" id="txtPasswordSiswa" class="form-control" placeholder="Masukkan sandi pencegah iseng">
         </div>
 
-        <!-- SISIPAN TOMBOL AKSI HARAPAN BAPAK (TERLETAK DI ANTARA PASSWORD DAN MASUK APLIKASI) -->
-        <div class="action-flex">
-            <button id="btnIngatSandi" class="btn-mini btn-active-save" onclick="gantiStatusIngatSaya()">💾 Ingat Sandi: AKTIF</button>
-            <button id="btnResetSesi" class="btn-mini" onclick="bersihkanSesiLaptop()">🔄 Reset Uji Coba</button>
-        </div>
-
         <button id="btnProsesLogin" class="btn-submit" onclick="eksekusiLoginSiswa()">
             Masuk Aplikasi ➔
         </button>
@@ -87,35 +75,13 @@
 
 <script>
     const URL_DATABASE = "https://script.google.com/macros/s/AKfycbyyq2-PBFrD4w5tDTElvi-niGCQF-ajlZ2X0eLwtUSjvpBZih18UttphnVpFfkpS89eDw/exec";
-    let statusIngatSandi = true; // Default bawaan selalu aktif mengingat sandi
 
-    // CEK APAKAH PERANGKAT SUDAH TERKUNCI LOGIN AKTIF
+    // JIKA PERNAH MASUK DAN BELUM LOGOUT, LANGSUNG DIALIKHAN KE JURNAL SHOLAT
     window.addEventListener('DOMContentLoaded', function() {
         if (localStorage.getItem("siswa_sholat_session")) {
             window.location.href = "sholat.html";
         }
     });
-
-    function gantiStatusIngatSaya() {
-        statusIngatSandi = !statusIngatSandi;
-        const btn = document.getElementById("btnIngatSandi");
-        if (statusIngatSandi) {
-            btn.innerText = "💾 Ingat Sandi: AKTIF";
-            btn.classList.add("btn-active-save");
-        } else {
-            btn.innerText = "❌ Jangan Ingat Sandi";
-            btn.classList.remove("btn-active-save");
-        }
-    }
-
-    function bersihkanSesiLaptop() {
-        localStorage.clear(); // Bersihkan brankas memori simulasi
-        document.getElementById("txtPilihKelas").value = "";
-        document.getElementById("txtPilihNama").innerHTML = '<option value="">-- Pilih Kelas Terlebih Dahulu --</option>';
-        document.getElementById("txtPilihNama").disabled = true;
-        document.getElementById("txtPasswordSiswa").value = "";
-        alert("Sistem Berhasil Direset! Laptop Bapak bersih kembali dan siap menguji coba nama siswa lain.");
-    }
 
     function muatSiswaOtomatis() {
         const kelas = document.getElementById("txtPilihKelas").value;
@@ -146,6 +112,7 @@
             selectNama.disabled = false;
             selectNama.style.backgroundColor = "#ffffff";
             
+            // Otomatis cek apakah nama yang dipilih punya sandi tersimpan
             deteksiSandiTersimpan();
         })
         .catch(function(err) {
@@ -154,6 +121,7 @@
         });
     }
 
+    // FUNGSI UTAMAKAN KENYAMANAN: OTOMATIS MENGISI SANDI JIKA PERNAH BERHASIL LOGIN
     function deteksiSandiTersimpan() {
         const nimSelected = document.getElementById("txtPilihNama").value;
         const inputPass = document.getElementById("txtPasswordSiswa");
@@ -163,7 +131,7 @@
             return;
         }
         
-        const sandiLokal = localStorage.getItem("brankas_sandi_" + nimSelected);
+        const sandiLokal = localStorage.getItem("brankas_yaspi_" + nimSelected);
         if (sandiLokal) {
             inputPass.value = sandiLokal;
         } else {
@@ -184,29 +152,23 @@
             return;
         }
 
-        btn.innerText = "⏳ Memvalidasi Sandi Sheet...";
+        btn.innerText = "⏳ Memvalidasi Keamanan...";
         btn.disabled = true;
 
-        // PERBAIKAN METODE: MENGGUNAKAN URLSearchParams AGAR BERFUNGSI SEBAGAI PENGIRIM DATA VALID
-        const parameterForm = new URLSearchParams();
-        parameterForm.append("action", "cek_login");
-        parameterForm.append("kelas", kelas);
-        parameterForm.append("nim", nim);
-        parameterForm.append("password", password);
+        // Kirim via POST String terenkripsi murni agar sinkron sempurna dengan Kode.gs pintar kita
+        const postDataStr = "action=cek_login&kelas=" + encodeURIComponent(kelas) + "&nim=" + encodeURIComponent(nim) + "&password=" + encodeURIComponent(password);
 
         fetch(URL_DATABASE, {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: parameterForm.toString()
+            body: postDataStr
         })
         .then(function(res) { return res.json(); })
         .then(function(hasilServer) {
             if (hasilServer.status === "sukses") {
                 
-                // JIKA OPSI TOMBOL INGAT AKTIF, SIMPAN KE BRANKAS HP/LAPTOP
-                if (statusIngatSandi) {
-                    localStorage.setItem("brankas_sandi_" + nim, password);
-                }
+                // OTOMATIS SIMPAN KE HP/LAPTOP SAAT BERHASIL LOGIN (TANPA TOMBOL MANUAL)
+                localStorage.setItem("brankas_yaspi_" + nim, password);
 
                 const payloadSesi = { nim: nim, nama: namaText, kelas: kelas };
                 localStorage.setItem("siswa_sholat_session", JSON.stringify(payloadSesi));
@@ -214,14 +176,13 @@
                 alert(hasilServer.pesan + " Selamat Datang, " + namaText + ".");
                 window.location.href = "sholat.html";
             } else {
-                // JIKA SERVER MENOLAK (PASSWORD SALAH)
                 alert("❌ LOGIN GAGAL: " + hasilServer.pesan);
                 btn.innerText = "Masuk Aplikasi ➔";
                 btn.disabled = false;
             }
         })
         .catch(function(err) {
-            alert("Sistem Keamanan Terbaca! Pastikan Web App Script Anda sudah di-Deploy ulang sebagai 'Anyone'.");
+            alert("Terjadi gangguan jaringan atau URL script belum di-deploy ulang. Sila periksa kembali.");
             btn.innerText = "Masuk Aplikasi ➔";
             btn.disabled = false;
         });
