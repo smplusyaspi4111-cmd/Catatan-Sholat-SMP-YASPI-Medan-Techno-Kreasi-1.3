@@ -23,9 +23,11 @@
         .form-control { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; outline: none; color: #4a5568; }
         .form-control:focus { border-color: var(--primary); }
         
-        /* GAYA BARU: KOTAK CENTANG INGAT SANDI (SANGAT RAPI DI TENGAH) */
-        .remember-group { display: flex; align-items: center; gap: 8px; margin-top: -10px; margin-bottom: 20px; font-size: 13px; font-weight: 600; color: #4a5568; cursor: pointer; user-select: none; }
-        .remember-group input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
+        /* TOMBOL KENDALI BARU (SIMPAN & RESET) DI ATAS TOMBOL MASUK */
+        .action-flex { display: flex; gap: 10px; margin-bottom: 20px; margin-top: -5px; }
+        .btn-mini { flex: 1; padding: 10px; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; background: #f8fafc; transition: 0.2s; color: #4a5568; }
+        .btn-mini:hover { background: #edf2f7; border-color: #cbd5e0; }
+        .btn-active-save { background: #e6f4ea; color: #137333; border-color: #c4e5cb; }
         
         .btn-submit { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 6px rgba(11, 102, 35, 0.2); }
         .btn-submit:hover { background: var(--primary-dark); }
@@ -66,10 +68,11 @@
             <input type="password" id="txtPasswordSiswa" class="form-control" placeholder="Masukkan sandi pencegah iseng">
         </div>
 
-        <label class="remember-group">
-            <input type="checkbox" id="chkIngatSandi" checked>
-            Ingat Akun dan Sandi Saya di Perangkat Ini
-        </label>
+        <!-- SISIPAN TOMBOL AKSI HARAPAN BAPAK (TERLETAK DI ANTARA PASSWORD DAN MASUK APLIKASI) -->
+        <div class="action-flex">
+            <button id="btnIngatSandi" class="btn-mini btn-active-save" onclick="gantiStatusIngatSaya()">💾 Ingat Sandi: AKTIF</button>
+            <button id="btnResetSesi" class="btn-mini" onclick="bersihkanSesiLaptop()">🔄 Reset Uji Coba</button>
+        </div>
 
         <button id="btnProsesLogin" class="btn-submit" onclick="eksekusiLoginSiswa()">
             Masuk Aplikasi ➔
@@ -84,13 +87,35 @@
 
 <script>
     const URL_DATABASE = "https://script.google.com/macros/s/AKfycbyyq2-PBFrD4w5tDTElvi-niGCQF-ajlZ2X0eLwtUSjvpBZih18UttphnVpFfkpS89eDw/exec";
+    let statusIngatSandi = true; // Default bawaan selalu aktif mengingat sandi
 
-    // JIKA AKUN SUDAH TERKUNCI LOGIN, LANGSUNG MASUK KE HALAMAN UTAMA SHOLAT
+    // CEK APAKAH PERANGKAT SUDAH TERKUNCI LOGIN AKTIF
     window.addEventListener('DOMContentLoaded', function() {
         if (localStorage.getItem("siswa_sholat_session")) {
             window.location.href = "sholat.html";
         }
     });
+
+    function gantiStatusIngatSaya() {
+        statusIngatSandi = !statusIngatSandi;
+        const btn = document.getElementById("btnIngatSandi");
+        if (statusIngatSandi) {
+            btn.innerText = "💾 Ingat Sandi: AKTIF";
+            btn.classList.add("btn-active-save");
+        } else {
+            btn.innerText = "❌ Jangan Ingat Sandi";
+            btn.classList.remove("btn-active-save");
+        }
+    }
+
+    function bersihkanSesiLaptop() {
+        localStorage.clear(); // Bersihkan brankas memori simulasi
+        document.getElementById("txtPilihKelas").value = "";
+        document.getElementById("txtPilihNama").innerHTML = '<option value="">-- Pilih Kelas Terlebih Dahulu --</option>';
+        document.getElementById("txtPilihNama").disabled = true;
+        document.getElementById("txtPasswordSiswa").value = "";
+        alert("Sistem Berhasil Direset! Laptop Bapak bersih kembali dan siap menguji coba nama siswa lain.");
+    }
 
     function muatSiswaOtomatis() {
         const kelas = document.getElementById("txtPilihKelas").value;
@@ -121,7 +146,6 @@
             selectNama.disabled = false;
             selectNama.style.backgroundColor = "#ffffff";
             
-            // Pemicu pengecekan otomatis setelah daftar nama selesai dimuat
             deteksiSandiTersimpan();
         })
         .catch(function(err) {
@@ -130,7 +154,6 @@
         });
     }
 
-    // FUNGSI MINI AUTO-FILL (SEPERTI GMAIL): OTOMATIS MENGISI SANDI JIKA SUDAH PERNAH LOGIN
     function deteksiSandiTersimpan() {
         const nimSelected = document.getElementById("txtPilihNama").value;
         const inputPass = document.getElementById("txtPasswordSiswa");
@@ -140,7 +163,6 @@
             return;
         }
         
-        // Membaca brankas lokal perangkat
         const sandiLokal = localStorage.getItem("brankas_sandi_" + nimSelected);
         if (sandiLokal) {
             inputPass.value = sandiLokal;
@@ -155,49 +177,51 @@
         const nim = selectNamaEl.value;
         const namaText = selectNamaEl.options[selectNamaEl.selectedIndex] ? selectNamaEl.options[selectNamaEl.selectedIndex].text : "";
         const password = document.getElementById("txtPasswordSiswa").value;
-        const chkIngat = document.getElementById("chkIngatSandi").checked;
         const btn = document.getElementById("btnProsesLogin");
 
         if (!kelas || !nim || !password) {
-            alert("Peringatan: Pilihan Kelas, Nama, dan Password tidak boleh ada yang kosong!");
+            alert("Peringatan: Pilihan Kelas, Nama, dan Password tidak boleh kosong!");
             return;
         }
 
-        btn.innerText = "⏳ Memproses Keamanan Akun...";
+        btn.innerText = "⏳ Memvalidasi Sandi Sheet...";
         btn.disabled = true;
 
-        const dataKirim = {
-            action: "cek_login",
-            kelas: kelas,
-            nim: nim,
-            password: password
-        };
+        // PERBAIKAN METODE: MENGGUNAKAN URLSearchParams AGAR BERFUNGSI SEBAGAI PENGIRIM DATA VALID
+        const parameterForm = new URLSearchParams();
+        parameterForm.append("action", "cek_login");
+        parameterForm.append("kelas", kelas);
+        parameterForm.append("nim", nim);
+        parameterForm.append("password", password);
 
         fetch(URL_DATABASE, {
             method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "text/plain" },
-            body: JSON.stringify(dataKirim)
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: parameterForm.toString()
         })
-        .then(function() {
-            // JIKA MEMILIH "INGAT SAYA", MAKA SIMPAN SANDINYA DI LAPTOP/HP INI (GMAIL STYLE)
-            if (chkIngat) {
-                localStorage.setItem("brankas_sandi_" + nim, password);
-            }
+        .then(function(res) { return res.json(); })
+        .then(function(hasilServer) {
+            if (hasilServer.status === "sukses") {
+                
+                // JIKA OPSI TOMBOL INGAT AKTIF, SIMPAN KE BRANKAS HP/LAPTOP
+                if (statusIngatSandi) {
+                    localStorage.setItem("brankas_sandi_" + nim, password);
+                }
 
-            const payloadSesi = {
-                nim: nim,
-                nama: namaText,
-                kelas: kelas
-            };
-            
-            // Kunci sesi aktif perangkat
-            localStorage.setItem("siswa_sholat_session", JSON.stringify(payloadSesi));
-            alert("Login Sukses! Selamat Datang, " + namaText + ".");
-            window.location.href = "sholat.html";
+                const payloadSesi = { nim: nim, nama: namaText, kelas: kelas };
+                localStorage.setItem("siswa_sholat_session", JSON.stringify(payloadSesi));
+                
+                alert(hasilServer.pesan + " Selamat Datang, " + namaText + ".");
+                window.location.href = "sholat.html";
+            } else {
+                // JIKA SERVER MENOLAK (PASSWORD SALAH)
+                alert("❌ LOGIN GAGAL: " + hasilServer.pesan);
+                btn.innerText = "Masuk Aplikasi ➔";
+                btn.disabled = false;
+            }
         })
         .catch(function(err) {
-            alert("Koneksi gagal atau validasi sandi sheet tidak merespons. Sila ulangi.");
+            alert("Sistem Keamanan Terbaca! Pastikan Web App Script Anda sudah di-Deploy ulang sebagai 'Anyone'.");
             btn.innerText = "Masuk Aplikasi ➔";
             btn.disabled = false;
         });
