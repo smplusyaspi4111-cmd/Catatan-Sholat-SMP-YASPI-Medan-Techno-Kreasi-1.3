@@ -22,6 +22,11 @@
         .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 8px; }
         .form-control { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; outline: none; color: #4a5568; }
         .form-control:focus { border-color: var(--primary); }
+        
+        /* GAYA BARU: KOTAK CENTANG INGAT SANDI (SANGAT RAPI DI TENGAH) */
+        .remember-group { display: flex; align-items: center; gap: 8px; margin-top: -10px; margin-bottom: 20px; font-size: 13px; font-weight: 600; color: #4a5568; cursor: pointer; user-select: none; }
+        .remember-group input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
+        
         .btn-submit { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 6px rgba(11, 102, 35, 0.2); }
         .btn-submit:hover { background: var(--primary-dark); }
         .btn-submit:disabled { background: #a0aec0; cursor: not-allowed; }
@@ -51,7 +56,7 @@
 
         <div class="form-group">
             <label>Nama Lengkap Murid:</label>
-            <select id="txtPilihNama" class="form-control" disabled style="background-color: #f7fafc;">
+            <select id="txtPilihNama" class="form-control" disabled style="background-color: #f7fafc;" onchange="deteksiSandiTersimpan()">
                 <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
             </select>
         </div>
@@ -60,6 +65,11 @@
             <label>Password Pengaman:</label>
             <input type="password" id="txtPasswordSiswa" class="form-control" placeholder="Masukkan sandi pencegah iseng">
         </div>
+
+        <label class="remember-group">
+            <input type="checkbox" id="chkIngatSandi" checked>
+            Ingat Akun dan Sandi Saya di Perangkat Ini
+        </label>
 
         <button id="btnProsesLogin" class="btn-submit" onclick="eksekusiLoginSiswa()">
             Masuk Aplikasi ➔
@@ -75,6 +85,7 @@
 <script>
     const URL_DATABASE = "https://script.google.com/macros/s/AKfycbyyq2-PBFrD4w5tDTElvi-niGCQF-ajlZ2X0eLwtUSjvpBZih18UttphnVpFfkpS89eDw/exec";
 
+    // JIKA AKUN SUDAH TERKUNCI LOGIN, LANGSUNG MASUK KE HALAMAN UTAMA SHOLAT
     window.addEventListener('DOMContentLoaded', function() {
         if (localStorage.getItem("siswa_sholat_session")) {
             window.location.href = "sholat.html";
@@ -109,11 +120,33 @@
             selectNama.innerHTML = htmlOptions;
             selectNama.disabled = false;
             selectNama.style.backgroundColor = "#ffffff";
+            
+            // Pemicu pengecekan otomatis setelah daftar nama selesai dimuat
+            deteksiSandiTersimpan();
         })
         .catch(function(err) {
             alert("Gagal mengunduh daftar nama siswa. Periksa koneksi internet Anda.");
             selectNama.innerHTML = '<option value="">⚠️ Gagal memuat data siswa</option>';
         });
+    }
+
+    // FUNGSI MINI AUTO-FILL (SEPERTI GMAIL): OTOMATIS MENGISI SANDI JIKA SUDAH PERNAH LOGIN
+    function deteksiSandiTersimpan() {
+        const nimSelected = document.getElementById("txtPilihNama").value;
+        const inputPass = document.getElementById("txtPasswordSiswa");
+        
+        if (!nimSelected) {
+            inputPass.value = "";
+            return;
+        }
+        
+        // Membaca brankas lokal perangkat
+        const sandiLokal = localStorage.getItem("brankas_sandi_" + nimSelected);
+        if (sandiLokal) {
+            inputPass.value = sandiLokal;
+        } else {
+            inputPass.value = "";
+        }
     }
 
     function eksekusiLoginSiswa() {
@@ -122,6 +155,7 @@
         const nim = selectNamaEl.value;
         const namaText = selectNamaEl.options[selectNamaEl.selectedIndex] ? selectNamaEl.options[selectNamaEl.selectedIndex].text : "";
         const password = document.getElementById("txtPasswordSiswa").value;
+        const chkIngat = document.getElementById("chkIngatSandi").checked;
         const btn = document.getElementById("btnProsesLogin");
 
         if (!kelas || !nim || !password) {
@@ -129,7 +163,7 @@
             return;
         }
 
-        btn.innerText = "⏳ Memverifikasi Sandi Murid...";
+        btn.innerText = "⏳ Memproses Keamanan Akun...";
         btn.disabled = true;
 
         const dataKirim = {
@@ -146,17 +180,24 @@
             body: JSON.stringify(dataKirim)
         })
         .then(function() {
+            // JIKA MEMILIH "INGAT SAYA", MAKA SIMPAN SANDINYA DI LAPTOP/HP INI (GMAIL STYLE)
+            if (chkIngat) {
+                localStorage.setItem("brankas_sandi_" + nim, password);
+            }
+
             const payloadSesi = {
                 nim: nim,
                 nama: namaText,
                 kelas: kelas
             };
+            
+            // Kunci sesi aktif perangkat
             localStorage.setItem("siswa_sholat_session", JSON.stringify(payloadSesi));
-            alert("Selamat Datang, " + namaText + "! Login sukses.");
+            alert("Login Sukses! Selamat Datang, " + namaText + ".");
             window.location.href = "sholat.html";
         })
         .catch(function(err) {
-            alert("Gangguan koneksi atau sandi salah. Silakan ulangi.");
+            alert("Koneksi gagal atau validasi sandi sheet tidak merespons. Sila ulangi.");
             btn.innerText = "Masuk Aplikasi ➔";
             btn.disabled = false;
         });
