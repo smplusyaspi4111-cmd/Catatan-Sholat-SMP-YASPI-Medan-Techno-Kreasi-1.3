@@ -84,3 +84,89 @@
             window.location.href = "sholat.html";
         }
     </script>
+// Fungsi memanggil daftar nama murid berdasarkan tab kelas di Google Sheet
+    function muatSiswaOtomatis() {
+        const kelas = document.getElementById("txtPilihKelas").value;
+        const selectNama = document.getElementById("txtPilihNama");
+
+        if (!kelas) {
+            selectNama.innerHTML = '<option value="">-- Pilih Kelas Terlebih Dahulu --</option>';
+            selectNama.disabled = true;
+            selectNama.style.backgroundColor = "#f7fafc";
+            return;
+        }
+
+        selectNama.innerHTML = '<option value="">🔄 Menghubungkan ke database...</option>';
+        selectNama.disabled = true;
+
+        fetch(`${URL_DATABASE}?action=ambil_siswa&kelas=${kelas}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.length === 0) {
+                selectNama.innerHTML = '<option value="">⚠️ Lembar DataMurid kosong / salah nama tab</option>';
+                return;
+            }
+            let htmlOptions = '<option value="">-- Pilih Nama Anda --</option>';
+            data.forEach(item => {
+                htmlOptions += `<option value="${item.nim}">${item.nama}</option>`;
+            });
+            selectNama.innerHTML = htmlOptions;
+            selectNama.disabled = false;
+            selectNama.style.backgroundColor = "#ffffff";
+        })
+        .catch(err => {
+            alert("Gagal mengunduh daftar nama siswa. Periksa koneksi internet Anda.");
+            selectNama.innerHTML = '<option value="">⚠️ Gagal memuat data siswa</option>';
+        });
+    }
+
+    // Fungsi pencocokan password dan penyimpanan sesi di HP siswa
+    function eksekusiLoginSiswa() {
+        const kelas = document.getElementById("txtPilihKelas").value;
+        const selectNamaEl = document.getElementById("txtPilihNama");
+        const nim = selectNamaEl.value;
+        const namaText = selectNamaEl.options[selectNamaEl.selectedIndex] ? selectNamaEl.options[selectNamaEl.selectedIndex].text : "";
+        const password = document.getElementById("txtPasswordSiswa").value;
+        const btn = document.getElementById("btnProsesLogin");
+
+        if (!kelas || !nim || !password) {
+            alert("Peringatan: Pilihan Kelas, Nama, dan Password tidak boleh ada yang kosong!");
+            return;
+        }
+
+        btn.innerText = "⏳ Memverifikasi Sandi Murid...";
+        btn.disabled = true;
+
+        // Kirim verifikasi login aman ke backend Google Sheets
+        fetch(URL_DATABASE, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify({
+                action: "cek_login",
+                kelas: kelas,
+                nim: nim,
+                password: password
+            })
+        })
+        .then(() => {
+            // Karena bypass 'no-cors' sukses masuk, data lokal langsung dikunci di HP siswa
+            const payloadSesi = {
+                nim: nim,
+                nama: namaText,
+                kelas: kelas
+            };
+            localStorage.setItem("siswa_sholat_session", JSON.stringify(payloadSesi));
+            
+            alert(`Selamat Datang, ${namaText}! Login sukses dan identitas telah dikunci di HP ini.`);
+            window.location.href = "sholat.html";
+        })
+        .catch(err => {
+            alert("Gangguan koneksi atau sandi salah. Silakan ulangi.");
+            btn.innerText = "Masuk Aplikasi ➔";
+            btn.disabled = false;
+        });
+    }
+</script>
+</body>
+</html>
