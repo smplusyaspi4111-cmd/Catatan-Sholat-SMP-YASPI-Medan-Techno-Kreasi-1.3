@@ -14,51 +14,35 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
         body { background-color: var(--bg-main); color: var(--text-main); padding: 15px; }
-        
-        /* Navigasi Atas */
         .navbar { display: flex; justify-content: space-between; align-items: center; background: #133b22; padding: 12px 20px; border-radius: 10px; color: white; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .navbar h1 { font-size: 16px; display: flex; align-items: center; gap: 8px; }
         .btn-keluar { background: #e53e3e; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; }
-
-        /* Dashboard Profile Box */
         .dashboard-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px; }
         @media(min-width: 768px) { .dashboard-grid { grid-template-columns: 1fr 1fr; } }
         .card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .time-box { text-align: center; }
         .time-box h2 { font-size: 32px; color: #1a202c; font-weight: 800; margin: 5px 0; }
         .time-box p { font-size: 13px; color: #718096; }
-        
         .profile-box { background: #2d3748; color: white; display: flex; flex-direction: column; justify-content: center; }
         .profile-box h2 { font-size: 24px; text-transform: uppercase; letter-spacing: 0.5px; }
         .profile-badge { display: inline-block; background: #e9b824; color: #1a202c; padding: 3px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; margin-top: 8px; align-self: flex-start; }
-
-        /* Judul Tabel Laporan */
         .section-title { font-size: 16px; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: #2d3748; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
-        
-        /* Item Baris Sholat */
         .sholat-row { background: white; padding: 15px; border-radius: 10px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 10px; }
         @media(min-width: 600px) { .sholat-row { flex-direction: row; align-items: center; justify-content: space-between; } }
-        
         .sholat-info { display: flex; gap: 15px; align-items: center; }
         .sholat-name { font-weight: bold; font-size: 16px; color: #2b6cb0; width: 80px; }
         .sholat-meta { font-size: 13px; color: #718096; }
-        
         .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; text-transform: uppercase; text-align: center; display: inline-block; }
         .status-belum { background: #edf2f7; color: #4a5568; }
         .status-terisi { background: #e3faf2; color: #0b6623; border: 1px solid #0b6623; }
-
-        /* Wadah Opsi Tombol Klik Sholat */
         .action-container { display: flex; gap: 8px; flex-wrap: wrap; }
         .btn-pilihan { padding: 8px 12px; font-size: 12px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; transition: all 0.2s; color: white; text-align: center; min-width: 75px; }
-        
-        /* Tombol Pilihan Variasi & Poin */
-        .btn-jamaah { background: #3182ce; } .btn-jamaah:hover { background: #2b6cb0; }
-        .btn-awal { background: #48bb78; }   .btn-awal:hover { background: #38a169; }
-        .btn-tengah { background: #ecc94b; color: #744210; } .btn-tengah:hover { background: #d69e2e; }
-        .btn-akhir { background: #f56565; }  .btn-akhir:hover { background: #e53e3e; }
-        .btn-udzur { background: #a0aec0; }  .btn-udzur:hover { background: #718096; }
-        
-        .btn-locked { background: #cbd5e0 !important; color: #718096 !important; cursor: not-allowed !important; box-shadow: none !important; opacity: 0.7; }
+        .btn-jamaah { background: #3182ce; }
+        .btn-awal { background: #48bb78; }
+        .btn-tengah { background: #ecc94b; color: #744210; }
+        .btn-akhir { background: #f56565; }
+        .btn-udzur { background: #a0aec0; }
+        .btn-locked { background: #cbd5e0 !important; color: #718096 !important; cursor: not-allowed !important; opacity: 0.7; }
     </style>
 </head>
 <body>
@@ -75,7 +59,7 @@
             <p id="liveTanggal">Memuat Hari & Tanggal...</p>
         </div>
         <div class="card profile-box">
-            <h2 id="lblNamaSiswa">NAMA MAHASISWA</h2>
+            <h2 id="lblNamaSiswa">NAMA SISWA</h2>
             <p style="font-size:13px; opacity:0.9; margin-top:2px;">NIM: <span id="lblNIMSiswa">0000</span></p>
             <div>
                 <span class="profile-badge" id="lblKelasSiswa">KELAS: 7-1</span>
@@ -90,11 +74,10 @@
     const URL_BACKEND = "https://script.google.com/macros/s/AKfycbyyq2-PBFrD4w5tDTElvi-niGCQF-ajlZ2X0eLwtUSjvpBZih18UttphnVpFfkpS89eDw/exec";
     let siswaData = null;
 
-    // Proteksi Keamanan Halaman Belakang
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', function() {
         const dataSesi = localStorage.getItem("siswa_sholat_session");
         if (!dataSesi) {
-            alert("Akses ditolak! Anda harus memasukkan identitas terlebih dahulu di halaman login.");
+            alert("Akses ditolak! Silakan login terlebih dahulu.");
             window.location.href = "index.html";
             return;
         }
@@ -102,7 +85,7 @@
         siswaData = JSON.parse(dataSesi);
         document.getElementById("lblNamaSiswa").innerText = siswaData.nama;
         document.getElementById("lblNIMSiswa").innerText = siswaData.nim;
-        document.getElementById("lblKelasSiswa").innerText = `KELAS: ${siswaData.kelas}`;
+        document.getElementById("lblKelasSiswa").innerText = "KELAS: " + siswaData.kelas;
         
         mulaiJamDigital();
         buatDaftarFormulirSholat();
@@ -110,73 +93,60 @@
 
     function mulaiJamDigital() {
         const opsiTgl = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Jakarta' };
-        
-        setInterval(() => {
+        setInterval(function() {
             const sekarang = new Date();
             document.getElementById("liveJam").innerText = sekarang.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta' });
-            document.getElementById("liveTanggal").innerText = sekarang.toLocaleDateString('id-ID', opsiTgl);
+            document.getElementById("liveTanggal").innerText = navigator.onLine ? sekarang.toLocaleDateString('id-ID', opsiTgl) : "Mode Luar Jaringan";
         }, 1000);
     }
 
-    // Mengolah daftar sholat fardhu 5 waktu
     const listSholat = [
-        { id: "S", nama: "Subuh", jam: "05:01 WIB" },
-        { id: "Z", nama: "Zuhur", jam: "12:28 WIB" },
-        { id: "A", nama: "Ashar", jam: "15:55 WIB" },
-        { id: "M", nama: "Maghrib", jam: "18:37 WIB" },
-        { id: "I", nama: "Isya", jam: "19:52 WIB" }
+        { id: "S", nama: "Subuh" },
+        { id: "Z", nama: "Zuhur" },
+        { id: "A", nama: "Ashar" },
+        { id: "M", nama: "Maghrib" },
+        { id: "I", nama: "Isya" }
     ];
 
     function buatDaftarFormulirSholat() {
         const kontainer = document.getElementById("containerDaftarSholat");
         kontainer.innerHTML = "";
-        
-        // Membaca riwayat klik tombol sholat khusus hari ini dari storage HP agar tidak klik ganda
         const tglKunci = new Date().toDateString();
 
-        listSholat.forEach(item => {
-            const idKunciLokal = `kunci_${siswaData.nim}_${item.id}_${tglKunci}`;
+        listSholat.forEach(function(item) {
+            const idKunciLokal = "kunci_" + siswaData.nim + "_" + item.id + "_" + tglKunci;
             const isiWaktuKunci = localStorage.getItem(idKunciLokal);
             
-            let statusHtml = `<span class="status-badge status-belum" id="status_${item.id}">Belum Diisi</span>`;
-            let tombolHtml = `
-                <div class="action-container" id="aksi_${item.id}">
-                    <button class="btn-pilihan btn-jamaah" onclick="catatPoinSholat('${item.id}', 'S', 'blue')">Jamaah</button>
-                    <button class="btn-pilihan btn-awal" onclick="catatPoinSholat('${item.id}', 'Z', 'awal')">Awal</button>
-                    <button class="btn-pilihan btn-tengah" onclick="catatPoinSholat('${item.id}', 'A', 'yellow')">Tengah</button>
-                    <button class="btn-pilihan btn-akhir" onclick="catatPoinSholat('${item.id}', 'M', 'red')">Akhir</button>
-                    <button class="btn-pilihan btn-udzur" onclick="catatPoinSholat('${item.id}', 'I', 'abu')">Udzur</button>
-                </div>
-            `;
+            let statusHtml = '<span class="status-badge status-belum">Belum Diisi</span>';
+            let tombolHtml = '<div class="action-container" id="aksi_' + item.id + '">' +
+                '<button class="btn-pilihan btn-jamaah" onclick="catatPoinSholat(\''+item.id+'\', \'blue\')">Jamaah</button>' +
+                '<button class="btn-pilihan btn-awal" onclick="catatPoinSholat(\''+item.id+'\', \'awal\')">Awal</button>' +
+                '<button class="btn-pilihan btn-tengah" onclick="catatPoinSholat(\''+item.id+'\', \'yellow\')">Tengah</button>' +
+                '<button class="btn-pilihan btn-akhir" onclick="catatPoinSholat(\''+item.id+'\', \'red\')">Akhir</button>' +
+                '<button class="btn-pilihan btn-udzur" onclick="catatPoinSholat(\''+item.id+'\', \'abu\')">Udzur</button>' +
+            '</div>';
 
             if (isiWaktuKunci) {
-                statusHtml = `<span class="status-badge status-terisi">🔒 Terkunci (${isiWaktuKunci})</span>`;
-                tombolHtml = `<div class="action-container"><button class="btn-pilihan btn-locked" disabled>Sudah Diisi</button></div>`;
+                statusHtml = '<span class="status-badge status-terisi">🔒 Terkunci (' + isiWaktuKunci + ')</span>';
+                tombolHtml = '<div class="action-container"><button class="btn-pilihan btn-locked" disabled>Sudah Diisi</button></div>';
             }
 
-            const barisHtml = `
-                <div class="sholat-row">
-                    <div class="sholat-info">
-                        <div class="sholat-name">${item.nama}</div>
-                        <div class="sholat-meta">Jadwal: ${item.jam}</div>
-                    </div>
-                    <div>${statusHtml}</div>
-                    ${tombolHtml}
-                </div>
-            `;
+            const barisHtml = '<div class="sholat-row">' +
+                '<div class="sholat-info"><div class="sholat-name">' + item.nama + '</div></div>' +
+                '<div>' + statusHtml + '</div>' + tombolHtml +
+            '</div>';
+            
             kontainer.insertAdjacentHTML('beforeend', barisHtml);
         });
     }
 
-    // Sinkronisasi data klik tombol sholat siswa langsung masuk ke lembar kolom spreadsheet terkait
-    function catatPoinSholat(kodeSholat, kodeNilai, warnaBg) {
+    function catatPoinSholat(kodeSholat, warnaBg) {
         const waktuKlikSiswa = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' });
-        const konfirmasi = confirm(`Konfirmasi isi sholat ini jam ${waktuKlikSiswa}? Sekali klik tidak bisa diubah murid.`);
+        const konfirmasi = confirm("Konfirmasi pengisian ibadah? Data langsung dikunci.");
         if (!konfirmasi) return;
 
-        // Ambil penampung seluruh tombol di baris tersebut dan bekukan untuk mencegah kiriman ganda sewaktu loading
-        const wadahTombol = document.getElementById(`aksi_${kodeSholat}`);
-        wadahTombol.innerHTML = `<button class="btn-pilihan btn-locked" disabled>⏳ Menyimpan ke spreadsheet...</button>`;
+        const wadahTombol = document.getElementById("aksi_" + kodeSholat);
+        wadahTombol.innerHTML = '<button class="btn-pilihan btn-locked" disabled>⏳ Menyimpan...</button>';
 
         const paketKirim = {
             action: "simpan_sholat",
@@ -192,22 +162,20 @@
             headers: { "Content-Type": "text/plain" },
             body: JSON.stringify(paketKirim)
         })
-        .then(() => {
-            // Penguncian permanen di memori lokal HP untuk hari ini setelah sukses tembus
+        .then(function() {
             const tglKunci = new Date().toDateString();
-            localStorage.setItem(`kunci_${siswaData.nim}_${kodeSholat}_${tglKunci}`, waktuKlikSiswa);
-            
-            alert("Alhamdulillah, laporan ibadah Anda berhasil masuk ke database nilai Guru.");
-            buatDaftarFormulirSholat(); // Segarkan tampilan baris sholat agar tombol mengunci otomatis
+            localStorage.setItem("kunci_" + siswaData.nim + "_" + kodeSholat + "_" + tglKunci, waktuKlikSiswa);
+            alert("Alhamdulillah, laporan berhasil dikirim ke server!");
+            buatDaftarFormulirSholat();
         })
-        .catch(err => {
-            alert("Kesalahan transmisi data ke Google Sheets. Silakan coba klik sekali lagi.");
+        .catch(function(err) {
+            alert("Gagal terhubung ke server. Coba klik lagi.");
             buatDaftarFormulirSholat();
         });
     }
 
     function prosesKeluarAplikasi() {
-        if(confirm("Apakah Anda ingin keluar akun? Riwayat login akan dihapus, dan harus mengetik password kembali besok.")) {
+        if(confirm("Apakah Anda ingin keluar akun?")) {
             localStorage.removeItem("siswa_sholat_session");
             window.location.href = "index.html";
         }
