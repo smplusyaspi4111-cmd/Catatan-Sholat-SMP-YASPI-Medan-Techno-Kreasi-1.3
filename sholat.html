@@ -35,7 +35,7 @@
 <div class="loading-overlay" id="loading">
     <div style="text-align: center;">
         <i class="fas fa-spinner fa-spin fa-2x"></i>
-        <p style="margin-top: 10px; font-size: 14px;">Memproses ke Cloud Server...</p>
+        <p style="margin-top: 10px;">Menyimpan ke Google Sheets...</p>
     </div>
 </div>
 
@@ -57,14 +57,14 @@
     <div class="skor-box">
         <p style="font-size:12px; font-weight:bold; color:#555;">TOTAL SKOR KEDISIPLINAN HARI INI</p>
         <div class="skor-angka" id="total-skor">0</div>
-        <p style="font-size:10px; color:#666;">Maksimal 100 poin per hari melalui validasi server Google Sheets</p>
+        <p style="font-size:10px; color:#666;">Nilai akan langsung masuk secara sinkron ke database</p>
     </div>
     
     <p class="footer-text">SMP YASPI MEDAN UNI-SISTEM © 2026</p>
 </div>
 
 <script>
-    // ⚠️ PASTIKAN MASUKKAN URL WEB APP HASIL DEPLOY BARU ANDA DI SINI
+    // ⚠️ GANTI DENGAN URL WEB APP HASIL DEPLOY BARU ANDA
     const URL_DATABASE = "URL_WEB_APP_ANDA_DI_SINI"; 
 
     const listWaktu = [
@@ -78,27 +78,24 @@
     let dataUser = JSON.parse(localStorage.getItem("user_sholat"));
     let skorLokal = {};
 
-    // Mengunci pembacaan memori agar aman dan stabil saat pertama dimuat
     if (dataUser) {
         try {
-            let lokalData = localStorage.getItem("skor_hari_ini_" + dataUser.nim);
-            if (lokalData) { skorLokal = JSON.parse(lokalData); }
-        } catch(e) { console.error("Gagal memuat memori lokal:", e); }
+            let logHariIni = localStorage.getItem("skor_hari_ini_" + dataUser.nim);
+            if (logHariIni) { skorLokal = JSON.parse(logHariIni); }
+        } catch(e) { console.error(e); }
     } else {
         logout();
     }
 
     $(document).ready(function() {
-        // Tempel Data Siswa ke Tampilan Profile
         $("#lbl-nama").text(dataUser.nama.toUpperCase());
         $("#lbl-nim").text(dataUser.nim);
         $("#lbl-kelas").text("Kelas " + dataUser.kelas);
         
-        // Buat Tanggal Indonesia Otomatis
         let opsi = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         $("#lbl-tanggal").text(new Date().toLocaleDateString('id-ID', opsi));
 
-        // Eksekusi render UI utama (Masing-masing panggil 1x saja biar tidak kedap-kedip)
+        // Panggil 1 kali saja saat halaman siap demi mencegah kedap-kedip
         renderCardSholat();
         hitungTotalSkor();
     });
@@ -106,16 +103,23 @@
     function renderCardSholat() {
         let html = "";
         listWaktu.forEach(w => {
-            let statusSelesai = skorLokal[w.id] ? `Selesai <i class="fas fa-check-circle"></i> (${skorLokal[w.id].jam})` : "Belum Diisi";
-            let statusBadgeColor = skorLokal[w.id] ? "background:#d1e7dd; color:#0f5132;" : "background:#e9ecef; color:#333;";
-            let isDisable = skorLokal[w.id] ? "disabled" : "";
-            let isUzurDisable = (dataUser.jk === "L" || skorLokal[w.id]) ? "disabled" : "";
+            let statusText = "Belum Diisi";
+            let badgeStyle = "background:#e9ecef; color:#333;";
+            let isDisable = "";
+            let isUzurDisable = dataUser.jk === "L" ? "disabled" : "";
+
+            if (skorLokal[w.id]) {
+                statusText = `Selesai (${skorLokal[w.id].jam})`;
+                badgeStyle = "background:#d1e7dd; color:#0f5132; font-weight:bold;";
+                isDisable = "disabled";
+                isUzurDisable = "disabled";
+            }
 
             html += `
             <div class="sholat-card">
                 <div class="sholat-title">
-                    <span>${w.nama} <span style="font-size:12px; font-weight:normal; color:#666;">(${w.jam})</span></span>
-                    <span class="status-badge" style="${statusBadgeColor}">${statusSelesai}</span>
+                    <span>${w.nama} <span style="font-size:11px; font-weight:normal; color:#666;">(${w.jam})</span></span>
+                    <span class="status-badge" style="${badgeStyle}">${statusText}</span>
                 </div>
                 <div class="grid-tombol">
                     <button class="btn-poin uzur" ${isUzurDisable} onclick="simpanSiswa('${w.id}', 20, 'Uzur')">Uzur/Haid<span>Poin 20</span></button>
@@ -141,14 +145,12 @@
         let d = new Date();
         let jamMenit = String(d.getHours()).padStart(2, '0') + "." + String(d.getMinutes()).padStart(2, '0');
         
-        // Simpan sementara di memori lokal untuk kalkulasi angka kiriman terbaru
+        // Simpan ke lokal fungsional terlebih dahulu
         skorLokal[waktuId] = { poin: poinKlik, jam: jamMenit };
-        let totalSkorKirim = hitungTotalSkor();
+        let akumulasiSkor = hitungTotalSkor();
 
-        // Tampilkan layar loading pemrosesan
         $("#loading").css("display", "flex");
 
-        // Kirim data terpadu ke Cloud Apps Script Google
         $.ajax({
             url: URL_DATABASE,
             type: "POST",
@@ -159,26 +161,25 @@
                 nim: dataUser.nim,
                 password: waktuId, 
                 jam: jamMenit,
-                total_skor: totalSkorKirim // Mengunci pengiriman angka total (misal 55) ke kolom 'Nilai' di Sheets
+                total_skor: akumulasiSkor
             },
             success: function(res) {
                 $("#loading").hide();
                 if (res.status === "sukses") {
                     localStorage.setItem("skor_hari_ini_" + dataUser.nim, JSON.stringify(skorLokal));
-                    alert("Berhasil menyimpan data sholat " + waktuId);
+                    alert("Berhasil menyimpan data sholat " + waktuId + " (" + namaStatus + ")");
                     renderCardSholat();
                 } else {
-                    // Jika server menolak, kembalikan data lokal seperti semula
-                    delete skorLokal[waktuId]; 
+                    delete skorLokal[waktuId];
                     hitungTotalSkor();
-                    alert("Gagal menyimpan ke Sheet: " + res.pesan);
+                    alert("Gagal menyimpan ke cloud: " + res.pesan);
                 }
             },
             error: function() {
                 $("#loading").hide();
                 delete skorLokal[waktuId];
                 hitungTotalSkor();
-                alert("Gagal terhubung ke Cloud Server. Periksa kembali jaringan internet Anda.");
+                alert("Gagal menghubungi server. Periksa koneksi internet.");
             }
         });
     }
