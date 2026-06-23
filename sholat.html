@@ -32,7 +32,12 @@
 </head>
 <body>
 
-<div class="loading-overlay" id="loading"><i class="fas fa-spinner fa-spin fa-2x"></i>&nbsp;&nbsp;Memproses data...</div>
+<div class="loading-overlay" id="loading">
+    <div style="text-align: center;">
+        <i class="fas fa-spinner fa-spin fa-2x"></i>
+        <p style="margin-top: 10px; font-size: 14px;">Memproses ke Cloud Server...</p>
+    </div>
+</div>
 
 <div class="app-container">
     <div class="header">
@@ -47,10 +52,8 @@
         <div class="profile-row"><span>Hari / Tanggal :</span><span id="lbl-tanggal" style="font-weight:500; color:#555;">-</span></div>
     </div>
 
-    <!-- DAFTAR SHOLAT -->
     <div id="container-sholat"></div>
 
-    <!-- TOTAL SKOR -->
     <div class="skor-box">
         <p style="font-size:12px; font-weight:bold; color:#555;">TOTAL SKOR KEDISIPLINAN HARI INI</p>
         <div class="skor-angka" id="total-skor">0</div>
@@ -61,8 +64,8 @@
 </div>
 
 <script>
-    // ⚠️ GANTI DENGAN URL WEB APP HASIL DEPLOY BARU ANDA
-    const URL_DATABASE = "https://script.google.com/macros/s/AKfycbwDVTZZgCKMKA-dqFbZudnRpkw3I3AyBripPhfbD7dELsK05jhWPbxUnoI0PsZN9IdM/exec"; 
+    // ⚠️ PASTIKAN MASUKKAN URL WEB APP HASIL DEPLOY BARU ANDA DI SINI
+    const URL_DATABASE = "URL_WEB_APP_ANDA_DI_SINI"; 
 
     const listWaktu = [
         { id: "S", nama: "Subuh", jam: "05.00 - 06.00" },
@@ -73,20 +76,29 @@
     ];
 
     let dataUser = JSON.parse(localStorage.getItem("user_sholat"));
-    let skorLokal = JSON.parse(localStorage.getItem("skor_hari_ini_" + dataUser?.nim)) || {};
+    let skorLokal = {};
 
-    if (!dataUser) { logout(); }
+    // Mengunci pembacaan memori agar aman dan stabil saat pertama dimuat
+    if (dataUser) {
+        try {
+            let lokalData = localStorage.getItem("skor_hari_ini_" + dataUser.nim);
+            if (lokalData) { skorLokal = JSON.parse(lokalData); }
+        } catch(e) { console.error("Gagal memuat memori lokal:", e); }
+    } else {
+        logout();
+    }
 
     $(document).ready(function() {
-        // Tampilkan Identitas Siswa
+        // Tempel Data Siswa ke Tampilan Profile
         $("#lbl-nama").text(dataUser.nama.toUpperCase());
         $("#lbl-nim").text(dataUser.nim);
         $("#lbl-kelas").text("Kelas " + dataUser.kelas);
         
-        // Atur Tanggal Hari Ini di Tampilan Web
+        // Buat Tanggal Indonesia Otomatis
         let opsi = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         $("#lbl-tanggal").text(new Date().toLocaleDateString('id-ID', opsi));
 
+        // Eksekusi render UI utama (Masing-masing panggil 1x saja biar tidak kedap-kedip)
         renderCardSholat();
         hitungTotalSkor();
     });
@@ -119,7 +131,7 @@
     function hitungTotalSkor() {
         let total = 0;
         listWaktu.forEach(w => {
-            if (skorLokal[w.id]) { total += skorLokal[w.id].poin; }
+            if (skorLokal[w.id]) { total += parseInt(skorLokal[w.id].poin); }
         });
         $("#total-skor").text(total);
         return total;
@@ -129,13 +141,14 @@
         let d = new Date();
         let jamMenit = String(d.getHours()).padStart(2, '0') + "." + String(d.getMinutes()).padStart(2, '0');
         
-        // Simpan sementara di memori web lokal untuk kalkulasi skor total terbaru
+        // Simpan sementara di memori lokal untuk kalkulasi angka kiriman terbaru
         skorLokal[waktuId] = { poin: poinKlik, jam: jamMenit };
         let totalSkorKirim = hitungTotalSkor();
 
+        // Tampilkan layar loading pemrosesan
         $("#loading").css("display", "flex");
 
-        // Kirim data lengkap ke Google Sheets
+        // Kirim data terpadu ke Cloud Apps Script Google
         $.ajax({
             url: URL_DATABASE,
             type: "POST",
@@ -144,9 +157,9 @@
                 action: "simpan_sholat",
                 kelas: dataUser.kelas,
                 nim: dataUser.nim,
-                password: waktuId, // Mengirim parameter pengenal kode S, Z, A, M, I
+                password: waktuId, 
                 jam: jamMenit,
-                total_skor: totalSkorKirim // KUNCI UTAMA: Mengirimkan akumulasi skor (55, dll) langsung ke Sheets
+                total_skor: totalSkorKirim // Mengunci pengiriman angka total (misal 55) ke kolom 'Nilai' di Sheets
             },
             success: function(res) {
                 $("#loading").hide();
@@ -155,16 +168,17 @@
                     alert("Berhasil menyimpan data sholat " + waktuId);
                     renderCardSholat();
                 } else {
-                    delete skorLokal[waktuId]; // batalkan jika gagal di server
+                    // Jika server menolak, kembalikan data lokal seperti semula
+                    delete skorLokal[waktuId]; 
                     hitungTotalSkor();
-                    alert("Gagal menyimpan: " + res.pesan);
+                    alert("Gagal menyimpan ke Sheet: " + res.pesan);
                 }
             },
             error: function() {
                 $("#loading").hide();
                 delete skorLokal[waktuId];
                 hitungTotalSkor();
-                alert("Gagal terhubung ke Cloud Server. Periksa koneksi internet Anda.");
+                alert("Gagal terhubung ke Cloud Server. Periksa kembali jaringan internet Anda.");
             }
         });
     }
