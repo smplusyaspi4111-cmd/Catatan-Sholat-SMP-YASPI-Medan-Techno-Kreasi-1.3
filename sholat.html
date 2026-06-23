@@ -186,53 +186,50 @@
     }
 
     function klikLaporkansholat(kodeSholat, tipeWaktu) {
-        const sekarang = new Date();
-        const jamKlikFormat = ("0" + sekarang.getHours()).slice(-2) + "." + ("0" + sekarang.getMinutes()).slice(-2);
-        
-        let warnaBgFinal = "blue"; 
-        let textLabel = "Tepat Waktu";
-        
-        if (tipeWaktu === "awal") { warnaBgFinal = "awal"; textLabel = "Awal Waktu"; }
-        else if (tipeWaktu === "yellow") { warnaBgFinal = "yellow"; textLabel = "Akhir Waktu"; }
-        else if (tipeWaktu === "red") { warnaBgFinal = "red"; textLabel = "Terlambat"; }
+    const sekarang = new Date();
+    const jamKlikFormat = ("0" + sekarang.getHours()).slice(-2) + "." + ("0" + sekarang.getMinutes()).slice(-2);
+    
+    let warnaBgFinal = "blue"; 
+    let textLabel = "Tepat Waktu";
+    
+    if (tipeWaktu === "awal") { warnaBgFinal = "awal"; textLabel = "Awal Waktu"; }
+    else if (tipeWaktu === "yellow") { warnaBgFinal = "yellow"; textLabel = "Akhir Waktu"; }
+    else if (tipeWaktu === "red") { warnaBgFinal = "red"; textLabel = "Terlambat"; }
 
-        if (!confirm("Apakah Anda yakin ingin melaporkan ibadah Sholat " + dapatkanNamaLengkapSholat(kodeSholat) + " pada jam " + jamKlikFormat + "?")) {
-            return;
-        }
-
-        kunciBarisSholatSelesai(kodeSholat, jamKlikFormat, warnaBgFinal);
-
-        const dataKirim = {
-            action: "simpan_sholat",
-            nim: DATA_SISWA_AKTIF.nim,
-            sholat: kodeSholat,
-            jam: jamKlikFormat,
-            warna: warnaBgFinal
-        };
-
-        fetch(URL_DATABASE, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "text/plain" },
-            body: JSON.stringify(dataKirim)
-        })
-        .then(function() {
-            // Amankan riwayat laporan lokal browser
-            const tglKunci = dapatkanFormatTanggalId();
-            let statusHariIni = localStorage.getItem("jurnal_klik_" + DATA_SISWA_AKTIF.nim + "_" + tglKunci);
-            let dataKlik = statusHariIni ? JSON.parse(statusHariIni) : {};
-            
-            dataKlik[kodeSholat] = { jam: jamKlikFormat, warnaBg: warnaBgFinal };
-            localStorage.setItem("jurnal_klik_" + DATA_SISWA_AKTIF.nim + "_" + tglKunci, JSON.stringify(dataKlik));
-            
-            hitungTotalSkorLokal();
-            alert("Alhamdulillah, data sholat " + dapatkanNamaLengkapSholat(kodeSholat) + " berhasil terkirim ke server pusat.");
-        })
-        .catch(function(err) {
-            alert("Gagal sinkronisasi data ke cloud. Periksa jaringan Anda.");
-        });
+    if (!confirm("Apakah Anda yakin ingin melaporkan ibadah Sholat " + dapatkanNamaLengkapSholat(kodeSholat) + " pada jam " + jamKlikFormat + "?")) {
+        return;
     }
 
+    kunciBarisSholatSelesai(kodeSholat, jamKlikFormat, warnaBgFinal);
+
+    // PERBAIKAN FORMULIR: Menggunakan string parameter terstandarisasi yang dimengerti oleh Kode.gs
+    const dataKirimForm = "action=simpan_sholat" +
+                          "&nim=" + encodeURIComponent(DATA_SISWA_AKTIF.nim) +
+                          "&password=" + encodeURIComponent(kodeSholat) + // Kode 'S','Z','A','M','I' dimasukkan ke parameter password agar dibaca server
+                          "&jam=" + encodeURIComponent(jamKlikFormat) +
+                          "&warna=" + encodeURIComponent(warnaBgFinal);
+
+    fetch(URL_DATABASE, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: dataKirimForm
+    })
+    .then(function() {
+        // Amankan riwayat laporan lokal browser
+        const tglKunci = dapatkanFormatTanggalId();
+        let statusHariIni = localStorage.getItem("jurnal_klik_" + DATA_SISWA_AKTIF.nim + "_" + tglKunci);
+        let dataKlik = statusHariIni ? JSON.parse(statusHariIni) : {};
+        
+        dataKlik[kodeSholat] = { jam: jamKlikFormat, warnaBg: warnaBgFinal };
+        localStorage.setItem("jurnal_klik_" + DATA_SISWA_AKTIF.nim + "_" + tglKunci, JSON.stringify(dataKlik));
+        
+        hitungTotalSkorLokal();
+        alert("Alhamdulillah, data sholat " + dapatkanNamaLengkapSholat(kodeSholat) + " berhasil terkirim ke server pusat.");
+    })
+    .catch(function(err) {
+        alert("Gagal sinkronisasi data ke cloud. Periksa jaringan Anda.");
+    });
+}
     function kunciBarisSholatSelesai(kodeSholat, jam, warna) {
         const row = document.getElementById("row-" + kodeSholat);
         const statusLabel = document.getElementById("status-S" + (kodeSholat === 'S' ? '' : 'tatus-' + kodeSholat) ? "status-" + kodeSholat : "");
