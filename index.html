@@ -12,7 +12,7 @@
             --text-main: #2d3748;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: #1a4d2e; background: linear-gradient(135deg, #133b22 0%, #1a4d2e 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        body { background: #133b22; background: linear-gradient(135deg, #133b22 0%, #1a4d2e 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .login-card { background: white; width: 100%; max-width: 420px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); overflow: hidden; }
         .card-header { background: var(--primary); padding: 25px; text-align: center; color: white; }
         .card-header h2 { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
@@ -76,7 +76,7 @@
 <script>
     const URL_DATABASE = "https://script.google.com/macros/s/AKfycbyyq2-PBFrD4w5tDTElvi-niGCQF-ajlZ2X0eLwtUSjvpBZih18UttphnVpFfkpS89eDw/exec";
 
-    // JIKA PERNAH MASUK DAN BELUM LOGOUT, LANGSUNG DIALIKHAN KE JURNAL SHOLAT
+    // JIKA PERNAH MASUK DAN BELUM LOGOUT, LANGSUNG DIALIHKAN KE JURNAL SHOLAT
     window.addEventListener('DOMContentLoaded', function() {
         if (localStorage.getItem("siswa_sholat_session")) {
             window.location.href = "sholat.html";
@@ -112,7 +112,7 @@
             selectNama.disabled = false;
             selectNama.style.backgroundColor = "#ffffff";
             
-            // Otomatis cek apakah nama yang dipilih punya sandi tersimpan
+            // Cek sandi otomatis
             deteksiSandiTersimpan();
         })
         .catch(function(err) {
@@ -121,7 +121,7 @@
         });
     }
 
-    // FUNGSI UTAMAKAN KENYAMANAN: OTOMATIS MENGISI SANDI JIKA PERNAH BERHASIL LOGIN
+    // FUNGSI PENGISIAN SANDI OTOMATIS JIKA TERSIMPAN DI LOCALSTORAGE
     function deteksiSandiTersimpan() {
         const nimSelected = document.getElementById("txtPilihNama").value;
         const inputPass = document.getElementById("txtPasswordSiswa");
@@ -131,23 +131,15 @@
             return;
         }
         
-        if (hasilServer.status === "sukses") {
-    // OTOMATIS SIMPAN KE HP/LAPTOP SAAT BERHASIL LOGIN
-    localStorage.setItem("brankas_yaspi_" + nim, password);
+        const sandiLokal = localStorage.getItem("brankas_yaspi_" + nimSelected);
+        if (sandiLokal) {
+            inputPass.value = sandiLokal;
+        } else {
+            inputPass.value = "";
+        }
+    }
 
-    // KUNCI PERBAIKAN: Masukkan properti 'jk' dari hasil server ke dalam payload sesi
-    const payloadSesi = { 
-        nim: nim, 
-        nama: namaText, 
-        kelas: kelas, 
-        jk: hasilServer.jk || "L" 
-    };
-    localStorage.setItem("siswa_sholat_session", JSON.stringify(payloadSesi));
-    
-    alert(hasilServer.pesan + " Selamat Datang, " + namaText + ".");
-    window.location.href = "sholat.html";
-}
-
+    // FUNGSI UTAMA LOGIN DENGAN PENGIRIMAN DATA GENDER (JK)
     function eksekusiLoginSiswa() {
         const kelas = document.getElementById("txtPilihKelas").value;
         const selectNamaEl = document.getElementById("txtPilihNama");
@@ -164,7 +156,6 @@
         btn.innerText = "⏳ Memvalidasi Keamanan...";
         btn.disabled = true;
 
-        // Kirim via POST String terenkripsi murni agar sinkron sempurna dengan Kode.gs pintar kita
         const postDataStr = "action=cek_login&kelas=" + encodeURIComponent(kelas) + "&nim=" + encodeURIComponent(nim) + "&password=" + encodeURIComponent(password);
 
         fetch(URL_DATABASE, {
@@ -176,10 +167,16 @@
         .then(function(hasilServer) {
             if (hasilServer.status === "sukses") {
                 
-                // OTOMATIS SIMPAN KE HP/LAPTOP SAAT BERHASIL LOGIN (TANPA TOMBOL MANUAL)
+                // 1. SIMPAN PASSWORD KE LOKAL HP/LAPTOP
                 localStorage.setItem("brankas_yaspi_" + nim, password);
 
-                const payloadSesi = { nim: nim, nama: namaText, kelas: kelas };
+                // 2. KUNCI UTAMA: Bawa variabel .jk atau .JK dari server Google Sheets
+                const payloadSesi = { 
+                    nim: nim, 
+                    nama: namaText, 
+                    kelas: kelas,
+                    jk: hasilServer.jk || hasilServer.JK || "L" // Fleksibel membaca jk huruf kecil maupun kapital dari Sheets
+                };
                 localStorage.setItem("siswa_sholat_session", JSON.stringify(payloadSesi));
                 
                 alert(hasilServer.pesan + " Selamat Datang, " + namaText + ".");
