@@ -33,37 +33,37 @@
 
     <form id="form-login">
         <div class="form-group">
-            <label>Pilih Kelas</label>
+            <label>Pilih Kelas Anda:</label>
             <select class="form-control" id="select-kelas" required>
                 <option value="">-- Pilih Kelas --</option>
-                <option value="7A">Kelas 7A</option>
-                <option value="7B">Kelas 7B</option>
-                <option value="8A">Kelas 8A</option>
-                <option value="8B">Kelas 8B</option>
-                <option value="9A">Kelas 9A</option>
-                <option value="9B">Kelas 9B</option>
+                <option value="7-1">Kelas 7-1</option>
+                <option value="7-2">Kelas 7-2</option>
+                <option value="8-1">Kelas 8-1</option>
+                <option value="8-2">Kelas 8-2</option>
+                <option value="9-1">Kelas 9-1</option>
+                <option value="9-2">Kelas 9-2</option>
             </select>
         </div>
 
         <div class="form-group">
-            <label>Nama Siswa</label>
+            <label>Nama Lengkap Murid:</label>
             <select class="form-control" id="select-siswa" required disabled>
                 <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
             </select>
         </div>
 
         <div class="form-group">
-            <label>Password / PIN Akses</label>
-            <input type="password" class="form-control" id="input-password" placeholder="Masukkan Password Anda" required>
+            <label>Password Pengaman:</label>
+            <input type="password" class="form-control" id="input-password" placeholder="Masukkan sandi pencegah iseng" required>
         </div>
 
-        <button type="submit" class="btn-login" id="btn-submit">MASUK JURNAL</button>
-        <div class="loading-text" id="loader"><i class="fas fa-spinner fa-spin"></i> Memproses ke server...</div>
+        <button type="submit" class="btn-login" id="btn-submit">Masuk Aplikasi ➔</button>
+        <div class="loading-text" id="loader"><i class="fas fa-spinner fa-spin"></i> Menghubungi server...</div>
     </form>
 </div>
 
 <script>
-    // ⚠️ GANTI DENGAN URL WEB APP HASIL DEPLOY BARU ANDA
+    // ⚠️ MASUKKAN URL WEB APP GOOGLE SCRIPT BARU ANDA DI SINI
     const URL_DATABASE = "URL_WEB_APP_ANDA_DI_SINI"; 
 
     // 1. Ambil daftar nama siswa saat kelas dipilih
@@ -88,6 +88,7 @@
             }
         }, "json").fail(function() {
             $("#select-siswa").html('<option value="">Gagal terhubung ke server</option>');
+            alert("Gagal mengunduh daftar nama siswa. Periksa koneksi internet Anda.");
         });
     });
 
@@ -113,11 +114,8 @@
             $("#loader").hide();
 
             if (res.status === "sukses") {
-                // Simpan identitas sukses ke memori HP siswa
                 let sesiUser = { kelas: kelas, nim: nim, nama: nama, jk: res.jk };
                 localStorage.setItem("user_sholat", JSON.stringify(sesiUser));
-                
-                // Pindah ke halaman pengisian sholat
                 window.location.href = "sholat.html";
             } else {
                 alert("Verifikasi Gagal: " + res.pesan);
