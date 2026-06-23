@@ -64,7 +64,7 @@
 </div>
 
 <script>
-    // ⚠️ GANTI DENGAN URL WEB APP HASIL DEPLOY BARU ANDA
+    // ⚠️ MASUKKAN URL WEB APP GOOGLE SCRIPT BARU ANDA DI SINI
     const URL_DATABASE = "URL_WEB_APP_ANDA_DI_SINI"; 
 
     const listWaktu = [
@@ -95,7 +95,6 @@
         let opsi = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         $("#lbl-tanggal").text(new Date().toLocaleDateString('id-ID', opsi));
 
-        // Panggil 1 kali saja saat halaman siap demi mencegah kedap-kedip
         renderCardSholat();
         hitungTotalSkor();
     });
@@ -145,7 +144,6 @@
         let d = new Date();
         let jamMenit = String(d.getHours()).padStart(2, '0') + "." + String(d.getMinutes()).padStart(2, '0');
         
-        // Simpan ke lokal fungsional terlebih dahulu
         skorLokal[waktuId] = { poin: poinKlik, jam: jamMenit };
         let akumulasiSkor = hitungTotalSkor();
 
