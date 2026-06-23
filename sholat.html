@@ -3,323 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jurnal Sholat Digital - SMP YASPI MEDAN</title>
+    <title>Jurnal Sholat Digital - SMP Yaspi</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root {
-            --primary: #0b6623;
-            --primary-dark: #054416;
-            --bg-main: #f7fafc;
-            --text-main: #2d3748;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #edf2f7; color: var(--text-main); padding: 15px; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
-        
-        .app-container { width: 100%; max-width: 480px; background: white; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 20px; }
-        .app-header { background: var(--primary); padding: 20px; text-align: center; color: white; position: relative; }
-        .app-header h3 { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
-        
-        .btn-logout { position: absolute; right: 15px; top: 18px; background: rgba(255,255,255,0.2); border: none; padding: 5px 10px; border-radius: 6px; color: white; font-size: 11px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-logout:hover { background: #e9b824; color: #133b22; }
-
-        .meta-box { background: #f8fafc; border-bottom: 2px solid #edf2f7; padding: 15px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; color: #4a5568; }
-        .meta-row { display: flex; justify-content: space-between; align-items: center; }
-        .meta-val { color: var(--primary); font-weight: 700; }
-        
-        .content-body { padding: 20px 15px; }
-        .sholat-row { background: #ffffff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 12px; transition: 0.2s; }
-        .sholat-row:hover { border-color: #cbd5e0; }
-        .sholat-info { display: flex; justify-content: space-between; align-items: center; }
-        .sholat-name { font-size: 15px; font-weight: 700; color: #2d3748; display: flex; align-items: center; gap: 8px; }
-        .sholat-status-label { font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 12px; background: #e2e8f0; color: #4a5568; }
-        
-        /* Menggunakan 4 kolom agar muat semua opsi tombol */
-        .btn-group { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
-        .btn-action { padding: 10px 2px; border: none; border-radius: 8px; font-size: 10px; font-weight: 700; cursor: pointer; text-align: center; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.15s; }
-        
-        /* DAFTAR WARNA TOMBOL */
-        .btn-berjamaah { background: #3a86ff; box-shadow: 0 3px 0 #1d60cc; } /* Biru */
-        .btn-berjamaah:active { transform: translateY(3px); box-shadow: none; }
-        
-        .btn-uzur { background: #8a8d91; box-shadow: 0 3px 0 #5a5c5e; } /* Abu-abu */
-        .btn-uzur:active { transform: translateY(3px); box-shadow: none; }
-        
-        .btn-awal { background: #5aab61; box-shadow: 0 3px 0 #3b8241; } /* Hijau */
-        .btn-awal:active { transform: translateY(3px); box-shadow: none; }
-        
-        .btn-akhir { background: #e2b13c; box-shadow: 0 3px 0 #b3861b; } /* Kuning */
-        .btn-akhir:active { transform: translateY(3px); box-shadow: none; }
-        
-        .btn-iseng { background: #da5959; box-shadow: 0 3px 0 #a83939; } /* Merah */
-        .btn-iseng:active { transform: translateY(3px); box-shadow: none; }
-        
-        .btn-action span { font-size: 8px; opacity: 0.9; margin-top: 2px; font-weight: normal; }
-        .disabled-row { background: #f7fafc; opacity: 0.8; pointer-events: none; border-color: #cbd5e0; }
-        
-        .score-card { background: #e6f4ea; border: 2px dashed #34a853; border-radius: 12px; padding: 15px; text-align: center; margin-top: 15px; }
-        .score-title { font-size: 12px; font-weight: 700; color: #137333; text-transform: uppercase; letter-spacing: 0.5px; }
-        .score-val { font-size: 32px; font-weight: 800; color: #137333; margin: 5px 0; }
-        .score-desc { font-size: 11px; color: #137333; opacity: 0.9; }
-        
-        .footer-logo { text-align: center; font-size: 11px; color: #a0aec0; margin-top: 10px; font-weight: 600; }
+        :root { --primary: #0f5132; --secondary: #198754; --bg: #f8f9fa; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { background-color: var(--primary); padding: 15px; display: flex; justify-content: center; }
+        .app-container { background: white; width: 100%; max-width: 500px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); overflow: hidden; }
+        .header { background: var(--primary); color: white; padding: 20px; text-align: center; position: relative; }
+        .btn-logout { position: absolute; right: 15px; top: 20px; background: rgba(255,255,255,0.2); border: none; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; }
+        .profile-box { background: var(--bg); padding: 15px; margin: 15px; border-radius: 10px; border-left: 5px solid var(--secondary); font-size: 14px; }
+        .profile-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .profile-val { font-weight: bold; color: var(--primary); }
+        .sholat-card { background: white; margin: 0 15px 15px 15px; padding: 15px; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; }
+        .sholat-title { font-size: 15px; font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .status-badge { font-size: 11px; padding: 3px 8px; border-radius: 20px; background: #e9ecef; }
+        .grid-tombol { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+        .btn-poin { border: none; padding: 12px 5px; text-align: center; border-radius: 8px; cursor: pointer; color: white; font-weight: bold; font-size: 11px; transition: 0.2s; }
+        .btn-poin span { display: block; font-size: 9px; font-weight: normal; margin-top: 2px; opacity: 0.9; }
+        .uzur { background: #6c757d; } .awal { background: #198754; } .akhir { background: #ffc107; color: #000; } .telat { background: #dc3545; }
+        .btn-poin:disabled { opacity: 0.4; cursor: not-allowed; }
+        .skor-box { background: #e8f5e9; margin: 15px; padding: 15px; border-radius: 10px; border: 2px dashed #198754; text-align: center; }
+        .skor-angka { font-size: 36px; font-weight: bold; color: #198754; margin: 5px 0; }
+        .footer-text { text-align: center; padding: 15px; font-size: 11px; color: rgba(255,255,255,0.7); }
+        .loading-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; color:white; z-index:999; }
     </style>
 </head>
 <body>
 
+<div class="loading-overlay" id="loading"><i class="fas fa-spinner fa-spin fa-2x"></i>&nbsp;&nbsp;Memproses data...</div>
+
 <div class="app-container">
-    <div class="app-header">
+    <div class="header">
         <h3>JURNAL SHOLAT DIGITAL</h3>
-        <button class="btn-logout" onclick="eksekusiKeluarAkun()">🚪 Keluar</button>
+        <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+    </div>
+
+    <div class="profile-box">
+        <div class="profile-row"><span>Nama Siswa :</span><span class="profile-val" id="lbl-nama">-</span></div>
+        <div class="profile-row"><span>Nomor NIM :</span><span class="profile-val" id="lbl-nim">-</span></div>
+        <div class="profile-row"><span>Kelas / Grup :</span><span class="profile-val" id="lbl-kelas">-</span></div>
+        <div class="profile-row"><span>Hari / Tanggal :</span><span id="lbl-tanggal" style="font-weight:500; color:#555;">-</span></div>
+    </div>
+
+    <!-- DAFTAR SHOLAT -->
+    <div id="container-sholat"></div>
+
+    <!-- TOTAL SKOR -->
+    <div class="skor-box">
+        <p style="font-size:12px; font-weight:bold; color:#555;">TOTAL SKOR KEDISIPLINAN HARI INI</p>
+        <div class="skor-angka" id="total-skor">0</div>
+        <p style="font-size:10px; color:#666;">Maksimal 100 poin per hari melalui validasi server Google Sheets</p>
     </div>
     
-    <div class="meta-box">
-        <div class="meta-row"><span>Nama Siswa :</span><span id="lblNamaSiswa" class="meta-val">-</span></div>
-        <div class="meta-row"><span>Nomor NIM :</span><span id="lblNIMSiswa" class="meta-val">-</span></div>
-        <div class="meta-row"><span>Kelas / Grup :</span><span id="lblKelasSiswa" class="meta-val">-</span></div>
-        <div class="meta-row" style="margin-top: 4px; padding-top: 4px; border-top: 1px dashed #e2e8f0;">
-            <span>Hari / Tanggal :</span><span id="lblTanggalHariIni" style="color:#718096;">-</span>
-        </div>
-    </div>
-
-    <div class="content-body">
-        <!-- BARIS SHOLAT SUBUH -->
-        <div id="row-S" class="sholat-row">
-            <div class="sholat-info">
-                <span class="sholat-name">🌅 Subuh <span>(05.00 - 06.00)</span></span>
-                <span id="status-S" class="sholat-status-label">Belum Diisi</span>
-            </div>
-            <div class="btn-group">
-                <!-- Tombol Fitur Gender Muncul di Posisi Pertama -->
-                <button id="btn-S-gender" class="btn-action btn-berjamaah" onclick="klikLaporkansholat('S', 'blue')">Berjamaah<span>Poin 20</span></button>
-                <button class="btn-action btn-awal" onclick="klikLaporkansholat('S', 'awal')">Awal Waktu<span>Poin 15</span></button>
-                <button class="btn-action btn-akhir" onclick="klikLaporkansholat('S', 'yellow')">Akhir Waktu<span>Poin 10</span></button>
-                <button class="btn-action btn-iseng" onclick="klikLaporkansholat('S', 'red')">Terlambat<span>Poin 5</span></button>
-            </div>
-        </div>
-
-        <!-- BARIS SHOLAT ZUHUR -->
-        <div id="row-Z" class="sholat-row">
-            <div class="sholat-info">
-                <span class="sholat-name">☀️ Zuhur <span>(12.30 - 15.00)</span></span>
-                <span id="status-Z" class="sholat-status-label">Belum Diisi</span>
-            </div>
-            <div class="btn-group">
-                <button id="btn-Z-gender" class="btn-action btn-berjamaah" onclick="klikLaporkansholat('Z', 'blue')">Berjamaah<span>Poin 20</span></button>
-                <button class="btn-action btn-awal" onclick="klikLaporkansholat('Z', 'awal')">Awal Waktu<span>Poin 15</span></button>
-                <button class="btn-action btn-akhir" onclick="klikLaporkansholat('Z', 'yellow')">Akhir Waktu<span>Poin 10</span></button>
-                <button class="btn-action btn-iseng" onclick="klikLaporkansholat('Z', 'red')">Terlambat<span>Poin 5</span></button>
-            </div>
-        </div>
-
-        <!-- BARIS SHOLAT ASAR -->
-        <div id="row-A" class="sholat-row">
-            <div class="sholat-info">
-                <span class="sholat-name">🌤️ Asar <span>(15.45 - 18.00)</span></span>
-                <span id="status-A" class="sholat-status-label">Belum Diisi</span>
-            </div>
-            <div class="btn-group">
-                <button id="btn-A-gender" class="btn-action btn-berjamaah" onclick="klikLaporkansholat('A', 'blue')">Berjamaah<span>Poin 20</span></button>
-                <button class="btn-action btn-awal" onclick="klikLaporkansholat('A', 'awal')">Awal Waktu<span>Poin 15</span></button>
-                <button class="btn-action btn-akhir" onclick="klikLaporkansholat('A', 'yellow')">Akhir Waktu<span>Poin 10</span></button>
-                <button class="btn-action btn-iseng" onclick="klikLaporkansholat('A', 'red')">Terlambat<span>Poin 5</span></button>
-            </div>
-        </div>
-
-        <!-- BARIS SHOLAT MAGRIB -->
-        <div id="row-M" class="sholat-row">
-            <div class="sholat-info">
-                <span class="sholat-name">🌆 Magrib <span>(18.45 - 19.45)</span></span>
-                <span id="status-M" class="sholat-status-label">Belum Diisi</span>
-            </div>
-            <div class="btn-group">
-                <button id="btn-M-gender" class="btn-action btn-berjamaah" onclick="klikLaporkansholat('M', 'blue')">Berjamaah<span>Poin 20</span></button>
-                <button class="btn-action btn-awal" onclick="klikLaporkansholat('M', 'awal')">Awal Waktu<span>Poin 15</span></button>
-                <button class="btn-action btn-akhir" onclick="klikLaporkansholat('M', 'yellow')">Akhir Waktu<span>Poin 10</span></button>
-                <button class="btn-action btn-iseng" onclick="klikLaporkansholat('M', 'red')">Terlambat<span>Poin 5</span></button>
-            </div>
-        </div>
-
-        <!-- BARIS SHOLAT ISYA -->
-        <div id="row-I" class="sholat-row">
-            <div class="sholat-info">
-                <span class="sholat-name">🌌 Isya <span>(20.00 - 23.00)</span></span>
-                <span id="status-I" class="sholat-status-label">Belum Diisi</span>
-            </div>
-            <div class="btn-group">
-                <button id="btn-I-gender" class="btn-action btn-berjamaah" onclick="klikLaporkansholat('I', 'blue')">Berjamaah<span>Poin 20</span></button>
-                <button class="btn-action btn-awal" onclick="klikLaporkansholat('I', 'awal')">Awal Waktu<span>Poin 15</span></button>
-                <button class="btn-action btn-akhir" onclick="klikLaporkansholat('I', 'yellow')">Akhir Waktu<span>Poin 10</span></button>
-                <button class="btn-action btn-iseng" onclick="klikLaporkansholat('I', 'red')">Terlambat<span>Poin 5</span></button>
-            </div>
-        </div>
-
-        <!-- RAPOR SKOR HARIAN -->
-        <div class="score-card">
-            <div class="score-title">Total Skor Kedisiplinan Hari Ini</div>
-            <div id="lblTotalPoin" class="score-val">0</div>
-            <div class="score-desc">Maksimal 100 poin per hari melalui validasi server Google Sheets</div>
-        </div>
-    </div>
+    <p class="footer-text">SMP YASPI MEDAN UNI-SISTEM © 2026</p>
 </div>
 
-<div class="footer-logo">SMP YASPI MEDAN UNI-SISTEM © 2026</div>
-
 <script>
-    const URL_DATABASE = "https://script.google.com/macros/s/AKfycbwDVTZZgCKMKA-dqFbZudnRpkw3I3AyBripPhfbD7dELsK05jhWPbxUnoI0PsZN9IdM/exec";
-    let DATA_SISWA_AKTIF = null;
+    // ⚠️ GANTI DENGAN URL WEB APP HASIL DEPLOY BARU ANDA
+    const URL_DATABASE = "URL_WEB_APP_ANDA_DI_SINI"; 
 
-    window.addEventListener('DOMContentLoaded', function() {
-        const dataSesi = localStorage.getItem("siswa_sholat_session");
-        if (!dataSesi) {
-            window.location.href = "index.html";
-            return;
-        }
+    const listWaktu = [
+        { id: "S", nama: "Subuh", jam: "05.00 - 06.00" },
+        { id: "Z", nama: "Zuhur", jam: "12.30 - 15.00" },
+        { id: "A", nama: "Asar", jam: "15.45 - 18.00" },
+        { id: "M", nama: "Magrib", jam: "18.45 - 19.45" },
+        { id: "I", nama: "Isya", jam: "20.00 - 23.00" }
+    ];
+
+    let dataUser = JSON.parse(localStorage.getItem("user_sholat"));
+    let skorLokal = JSON.parse(localStorage.getItem("skor_hari_ini_" + dataUser?.nim)) || {};
+
+    if (!dataUser) { logout(); }
+
+    $(document).ready(function() {
+        // Tampilkan Identitas Siswa
+        $("#lbl-nama").text(dataUser.nama.toUpperCase());
+        $("#lbl-nim").text(dataUser.nim);
+        $("#lbl-kelas").text("Kelas " + dataUser.kelas);
         
-        DATA_SISWA_AKTIF = JSON.parse(dataSesi);
-        document.getElementById("lblNamaSiswa").innerText = DATA_SISWA_AKTIF.nama;
-        document.getElementById("lblNIMSiswa").innerText = DATA_SISWA_AKTIF.nim;
-        document.getElementById("lblKelasSiswa").innerText = "Kelas " + DATA_SISWA_AKTIF.kelas;
-        
-        const opsiHari = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Jakarta' };
-        document.getElementById("lblTanggalHariIni").innerText = new Date().toLocaleDateString('id-ID', opsiHari);
-        
-        // JALANKAN LOGIKA PENYESUAIAN TOMBOL BERDASARKAN GENDER
-        aturTombolBerdasarkanGender();
-        
-        // Pulihkan tombol yang sudah diklik sebelumnya
-        const statusHariIni = localStorage.getItem("jurnal_klik_" + DATA_SISWA_AKTIF.nim + "_" + dapatkanFormatTanggalId());
-        if (statusHariIni) {
-            const dataKlik = JSON.parse(statusHariIni);
-            Object.keys(dataKlik).forEach(function(kode) {
-                kunciBarisSholatSelesai(kode, dataKlik[kode].jam, dataKlik[kode].warnaBg);
-            });
-            hitungTotalSkorLokal();
-        }
+        // Atur Tanggal Hari Ini di Tampilan Web
+        let opsi = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        $("#lbl-tanggal").text(new Date().toLocaleDateString('id-ID', opsi));
+
+        renderCardSholat();
+        hitungTotalSkor();
     });
 
-    // FUNGSI CONFIG TOMBOL BERDASARKAN GENDER (TIDAK MENGHAPUS AWAL WAKTU)
-    function aturTombolBerdasarkanGender() {
-        const jk = (DATA_SISWA_AKTIF.jk || "L").toUpperCase(); 
-        const daftarKode = ['S', 'Z', 'A', 'M', 'I'];
+    function renderCardSholat() {
+        let html = "";
+        listWaktu.forEach(w => {
+            let statusSelesai = skorLokal[w.id] ? `Selesai <i class="fas fa-check-circle"></i> (${skorLokal[w.id].jam})` : "Belum Diisi";
+            let statusBadgeColor = skorLokal[w.id] ? "background:#d1e7dd; color:#0f5132;" : "background:#e9ecef; color:#333;";
+            let isDisable = skorLokal[w.id] ? "disabled" : "";
+            let isUzurDisable = (dataUser.jk === "L" || skorLokal[w.id]) ? "disabled" : "";
+
+            html += `
+            <div class="sholat-card">
+                <div class="sholat-title">
+                    <span>${w.nama} <span style="font-size:12px; font-weight:normal; color:#666;">(${w.jam})</span></span>
+                    <span class="status-badge" style="${statusBadgeColor}">${statusSelesai}</span>
+                </div>
+                <div class="grid-tombol">
+                    <button class="btn-poin uzur" ${isUzurDisable} onclick="simpanSiswa('${w.id}', 20, 'Uzur')">Uzur/Haid<span>Poin 20</span></button>
+                    <button class="btn-poin awal" ${isDisable} onclick="simpanSiswa('${w.id}', 15, 'Awal')">Awal Waktu<span>Poin 15</span></button>
+                    <button class="btn-poin akhir" ${isDisable} onclick="simpanSiswa('${w.id}', 10, 'Akhir')">Akhir Waktu<span>Poin 10</span></button>
+                    <button class="btn-poin telat" ${isDisable} onclick="simpanSiswa('${w.id}', 5, 'Terlambat')">Terlambat<span>Poin 5</span></button>
+                </div>
+            </div>`;
+        });
+        $("#container-sholat").html(html);
+    }
+
+    function hitungTotalSkor() {
+        let total = 0;
+        listWaktu.forEach(w => {
+            if (skorLokal[w.id]) { total += skorLokal[w.id].poin; }
+        });
+        $("#total-skor").text(total);
+        return total;
+    }
+
+    function simpanSiswa(waktuId, poinKlik, namaStatus) {
+        let d = new Date();
+        let jamMenit = String(d.getHours()).padStart(2, '0') + "." + String(d.getMinutes()).padStart(2, '0');
         
-        daftarKode.forEach(function(kode) {
-            const btnGender = document.getElementById("btn-" + kode + "-gender");
-            if (btnGender) {
-                if (jk === "L" || jk === "LAKI-LAKI") {
-                    btnGender.className = "btn-action btn-berjamaah";
-                    btnGender.innerHTML = "Berjamaah<span>Poin 20</span>";
-                    btnGender.setAttribute("onclick", "klikLaporkansholat('" + kode + "', 'blue')");
+        // Simpan sementara di memori web lokal untuk kalkulasi skor total terbaru
+        skorLokal[waktuId] = { poin: poinKlik, jam: jamMenit };
+        let totalSkorKirim = hitungTotalSkor();
+
+        $("#loading").css("display", "flex");
+
+        // Kirim data lengkap ke Google Sheets
+        $.ajax({
+            url: URL_DATABASE,
+            type: "POST",
+            dataType: "json",
+            data: {
+                action: "simpan_sholat",
+                kelas: dataUser.kelas,
+                nim: dataUser.nim,
+                password: waktuId, // Mengirim parameter pengenal kode S, Z, A, M, I
+                jam: jamMenit,
+                total_skor: totalSkorKirim // KUNCI UTAMA: Mengirimkan akumulasi skor (55, dll) langsung ke Sheets
+            },
+            success: function(res) {
+                $("#loading").hide();
+                if (res.status === "sukses") {
+                    localStorage.setItem("skor_hari_ini_" + dataUser.nim, JSON.stringify(skorLokal));
+                    alert("Berhasil menyimpan data sholat " + waktuId);
+                    renderCardSholat();
                 } else {
-                    // Jika P (Perempuan), ubah tombol pertamanya menjadi Uzur/Haid tanpa mengganggu tombol Awal Waktu
-                    btnGender.className = "btn-action btn-uzur";
-                    btnGender.innerHTML = "Uzur / Haid<span>Poin 20</span>";
-                    btnGender.setAttribute("onclick", "klikLaporkansholat('" + kode + "', 'abu')");
+                    delete skorLokal[waktuId]; // batalkan jika gagal di server
+                    hitungTotalSkor();
+                    alert("Gagal menyimpan: " + res.pesan);
                 }
+            },
+            error: function() {
+                $("#loading").hide();
+                delete skorLokal[waktuId];
+                hitungTotalSkor();
+                alert("Gagal terhubung ke Cloud Server. Periksa koneksi internet Anda.");
             }
         });
     }
 
-    function dapatkanFormatTanggalId() {
-        const d = new Date();
-        return d.getDate() + "-" + (d.getMonth()+1) + "-" + d.getFullYear();
-    }
-
-    function klikLaporkansholat(kodeSholat, tipeWaktu) {
-        const sekarang = new Date();
-        const jamKlikFormat = ("0" + sekarang.getHours()).slice(-2) + "." + ("0" + sekarang.getMinutes()).slice(-2);
-        
-        let warnaBgFinal = "awal"; 
-        let textLabel = "Awal Waktu";
-        
-        if (tipeWaktu === "blue") { warnaBgFinal = "blue"; textLabel = "Berjamaah"; }
-        else if (tipeWaktu === "abu") { warnaBgFinal = "abu"; textLabel = "Uzur"; }
-        else if (tipeWaktu === "yellow") { warnaBgFinal = "yellow"; textLabel = "Akhir Waktu"; }
-        else if (tipeWaktu === "red") { warnaBgFinal = "red"; textLabel = "Terlambat"; }
-
-        // POPUP KHUSUS JIKA TOMBOL UZUR DIKLIK OLEH PEREMPUAN
-        if (warnaBgFinal === "abu") {
-            alert("✨ Pengingat Amalan Uzur:\nGantinya kamu Sholawat 4 kali ya!");
-        }
-
-        if (!confirm("Apakah Anda yakin ingin melaporkan ibadah Sholat " + dapatkanNamaLengkapSholat(kodeSholat) + " dengan status [" + textLabel + "] pada jam " + jamKlikFormat + "?")) {
-            return;
-        }
-
-        kunciBarisSholatSelesai(kodeSholat, jamKlikFormat, warnaBgFinal);
-
-        const dataKirimForm = "action=simpan_sholat" +
-                              "&nim=" + encodeURIComponent(DATA_SISWA_AKTIF.nim) +
-                              "&password=" + encodeURIComponent(kodeSholat) +
-                              "&jam=" + encodeURIComponent(jamKlikFormat) +
-                              "&warna=" + encodeURIComponent(warnaBgFinal);
-
-        fetch(URL_DATABASE, {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: dataKirimForm
-        })
-        .then(function() {
-            const tglKunci = dapatkanFormatTanggalId();
-            let statusHariIni = localStorage.getItem("jurnal_klik_" + DATA_SISWA_AKTIF.nim + "_" + tglKunci);
-            let dataKlik = statusHariIni ? JSON.parse(statusHariIni) : {};
-            
-            dataKlik[kodeSholat] = { jam: jamKlikFormat, warnaBg: warnaBgFinal };
-            localStorage.setItem("jurnal_klik_" + DATA_SISWA_AKTIF.nim + "_" + tglKunci, JSON.stringify(dataKlik));
-            
-            hitungTotalSkorLokal();
-            alert("Alhamdulillah, data " + dapatkanNamaLengkapSholat(kodeSholat) + " berhasil disinkronisasi ke cloud.");
-        })
-        .catch(function(err) {
-            alert("Gagal sinkronisasi data ke cloud. Periksa jaringan Anda.");
-        });
-    }
-
-    function kunciBarisSholatSelesai(kodeSholat, jam, warna) {
-        const row = document.getElementById("row-" + kodeSholat);
-        const statusLabel = document.getElementById("status-" + kodeSholat);
-        
-        if (row && statusLabel) {
-            row.classList.add("disabled-row");
-            statusLabel.innerText = "Selesai ✔️ (" + jam + ")";
-            
-            if (warna === "blue") { statusLabel.style.backgroundColor = "#c9daf8"; statusLabel.style.color = "#1c4587"; }
-            else if (warna === "abu") { statusLabel.style.backgroundColor = "#d9d9d9"; statusLabel.style.color = "#434343"; }
-            else if (warna === "awal") { statusLabel.style.backgroundColor = "#b6d7a8"; statusLabel.style.color = "#133b22"; }
-            else if (warna === "yellow") { statusLabel.style.backgroundColor = "#ffe599"; statusLabel.style.color = "#7f6000"; }
-            else if (warna === "red") { statusLabel.style.backgroundColor = "#ea9999"; statusLabel.style.color = "#660000"; }
-        }
-    }
-
-    function hitungTotalSkorLokal() {
-        const tglKunci = dapatkanFormatTanggalId();
-        const statusHariIni = localStorage.getItem("jurnal_klik_" + DATA_SISWA_AKTIF.nim + "_" + tglKunci);
-        let total = 0;
-        
-        if (statusHariIni) {
-            const dataKlik = JSON.parse(statusHariIni);
-            Object.keys(dataKlik).forEach(function(k) {
-                let w = dataKlik[k].warnaBg;
-                if (w === "blue" || w === "abu") total += 20;
-                else if (w === "awal") total += 15; // Set Poin Awal Waktu Kembali ke 15 Poin
-                else if (w === "yellow") total += 10;
-                else if (w === "red") total += 5;
-            });
-        }
-        document.getElementById("lblTotalPoin").innerText = total;
-    }
-
-    function dapatkanNamaLengkapSholat(kode) {
-        if (kode === "S") return "Subuh";
-        if (kode === "Z") return "Zuhur";
-        if (kode === "A") return "Asar";
-        if (kode === "M") return "Magrib";
-        return "Isya";
-    }
-
-    function eksekusiKeluarAkun() {
-        if (confirm("Apakah Anda ingin keluar dari portal akun saat ini?")) {
-            localStorage.removeItem("siswa_sholat_session");
-            window.location.href = "index.html";
-        }
+    function logout() {
+        localStorage.removeItem("user_sholat");
+        window.location.href = "index.html";
     }
 </script>
 </body>
