@@ -131,13 +131,22 @@
             return;
         }
         
-        const sandiLokal = localStorage.getItem("brankas_yaspi_" + nimSelected);
-        if (sandiLokal) {
-            inputPass.value = sandiLokal;
-        } else {
-            inputPass.value = "";
-        }
-    }
+        if (hasilServer.status === "sukses") {
+    // OTOMATIS SIMPAN KE HP/LAPTOP SAAT BERHASIL LOGIN
+    localStorage.setItem("brankas_yaspi_" + nim, password);
+
+    // KUNCI PERBAIKAN: Masukkan properti 'jk' dari hasil server ke dalam payload sesi
+    const payloadSesi = { 
+        nim: nim, 
+        nama: namaText, 
+        kelas: kelas, 
+        jk: hasilServer.jk || "L" 
+    };
+    localStorage.setItem("siswa_sholat_session", JSON.stringify(payloadSesi));
+    
+    alert(hasilServer.pesan + " Selamat Datang, " + namaText + ".");
+    window.location.href = "sholat.html";
+}
 
     function eksekusiLoginSiswa() {
         const kelas = document.getElementById("txtPilihKelas").value;
