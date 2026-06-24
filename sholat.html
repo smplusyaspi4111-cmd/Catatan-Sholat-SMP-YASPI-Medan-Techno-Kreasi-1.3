@@ -9,176 +9,138 @@
     <style>
         :root { --primary: #0f5132; --secondary: #198754; --bg: #f8f9fa; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
-        body { background-color: var(--primary); padding: 15px; display: flex; justify-content: center; }
-        .app-container { background: white; width: 100%; max-width: 500px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); overflow: hidden; }
-        .header { background: var(--primary); color: white; padding: 20px; text-align: center; position: relative; }
-        .btn-logout { position: absolute; right: 15px; top: 20px; background: rgba(255,255,255,0.2); border: none; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; }
-        .profile-box { background: var(--bg); padding: 15px; margin: 15px; border-radius: 10px; border-left: 5px solid var(--secondary); font-size: 14px; }
-        .profile-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .profile-val { font-weight: bold; color: var(--primary); }
-        .sholat-card { background: white; margin: 0 15px 15px 15px; padding: 15px; border-radius: 10px; box-shadow: 0 3px 10px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; }
-        .sholat-title { font-size: 15px; font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .status-badge { font-size: 11px; padding: 3px 8px; border-radius: 20px; background: #e9ecef; }
-        .grid-tombol { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
-        .btn-poin { border: none; padding: 12px 5px; text-align: center; border-radius: 8px; cursor: pointer; color: white; font-weight: bold; font-size: 11px; transition: 0.2s; }
-        .btn-poin span { display: block; font-size: 9px; font-weight: normal; margin-top: 2px; opacity: 0.9; }
-        .uzur { background: #6c757d; } .awal { background: #198754; } .akhir { background: #ffc107; color: #000; } .telat { background: #dc3545; }
-        .btn-poin:disabled { opacity: 0.4; cursor: not-allowed; }
-        .skor-box { background: #e8f5e9; margin: 15px; padding: 15px; border-radius: 10px; border: 2px dashed #198754; text-align: center; }
-        .skor-angka { font-size: 36px; font-weight: bold; color: #198754; margin: 5px 0; }
-        .footer-text { text-align: center; padding: 15px; font-size: 11px; color: rgba(255,255,255,0.7); }
-        .loading-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; color:white; z-index:999; }
+        body { background-color: #f1f3f5; padding-bottom: 30px; }
+        .header-panel { background: var(--primary); color: white; padding: 20px; text-align: center; position: relative; }
+        .btn-keluar { position: absolute; right: 15px; top: 20px; background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 12px; }
+        .profil-card { background: white; max-width: 600px; margin: -15px auto 15px; border-radius: 10px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 92%; border-left: 5px solid var(--secondary); }
+        .profil-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }
+        .profil-label { color: #666; }
+        .profil-value { font-weight: bold; color: #333; }
+        .sholat-container { max-width: 600px; margin: 0 auto; width: 92%; }
+        .sholat-card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .sholat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 5px; border-bottom: 1px solid #eee; }
+        .sholat-title { font-weight: bold; font-size: 16px; color: var(--primary); }
+        .sholat-time { font-size: 11px; color: #888; }
+        .sholat-status { font-size: 12px; padding: 3px 8px; background: #e9ecef; border-radius: 20px; color: #666; font-weight: bold; }
+        .opsi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .btn-opsi { border: none; padding: 10px 5px; border-radius: 8px; color: white; font-size: 11px; font-weight: bold; cursor: pointer; text-align: center; transition: 0.2s; }
+        .btn-uzur { background: #6c757d; }
+        .btn-awal { background: #198754; }
+        .btn-akhir { background: #ffc107; color: #212529; }
+        .btn-lambat { background: #dc3545; }
+        .btn-opsi:hover { opacity: 0.85; transform: scale(1.02); }
+        .loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; justify-content: center; align-items: center; color: white; flex-direction: column; font-size: 14px; }
     </style>
 </head>
 <body>
 
-<div class="loading-overlay" id="loading">
-    <div style="text-align: center;">
-        <i class="fas fa-spinner fa-spin fa-2x"></i>
-        <p style="margin-top: 10px;">Menyimpan ke Google Sheets...</p>
-    </div>
+<div class="header-panel">
+    <h2>JURNAL SHOLAT DIGITAL</h2>
+    <button class="btn-keluar" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Keluar</button>
 </div>
 
-<div class="app-container">
-    <div class="header">
-        <h3>JURNAL SHOLAT DIGITAL</h3>
-        <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+<div class="profil-card">
+    <div class="profil-row"><span class="profil-label">Nama Siswa :</span><span class="profil-value" id="prof-nama">-</span></div>
+    <div class="profil-row"><span class="profil-label">Nomor NIM :</span><span class="profil-value" id="prof-nim">-</span></div>
+    <div class="profil-row"><span class="profil-label">Kelas / Grup :</span><span class="profil-value" id="prof-kelas">-</span></div>
+    <div class="profil-row"><span class="profil-label">Hari / Tanggal :</span><span class="profil-value" id="prof-tanggal">-</span></div>
+</div>
+
+<div class="sholat-container" id="daftar-sholat">
     </div>
 
-    <div class="profile-box">
-        <div class="profile-row"><span>Nama Siswa :</span><span class="profile-val" id="lbl-nama">-</span></div>
-        <div class="profile-row"><span>Nomor NIM :</span><span class="profile-val" id="lbl-nim">-</span></div>
-        <div class="profile-row"><span>Kelas / Grup :</span><span class="profile-val" id="lbl-kelas">-</span></div>
-        <div class="profile-row"><span>Hari / Tanggal :</span><span id="lbl-tanggal" style="font-weight:500; color:#555;">-</span></div>
-    </div>
-
-    <div id="container-sholat"></div>
-
-    <div class="skor-box">
-        <p style="font-size:12px; font-weight:bold; color:#555;">TOTAL SKOR KEDISIPLINAN HARI INI</p>
-        <div class="skor-angka" id="total-skor">0</div>
-        <p style="font-size:10px; color:#666;">Nilai akan langsung masuk secara sinkron ke database</p>
-    </div>
-    
-    <p class="footer-text">SMP YASPI MEDAN UNI-SISTEM © 2026</p>
+<div class="loading-overlay" id="saving-loader">
+    <i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom: 10px;"></i>
+    <span>Menyimpan ke Google Sheets...</span>
 </div>
 
 <script>
-    // ⚠️ MASUKKAN URL WEB APP GOOGLE SCRIPT BARU ANDA DI SINI
-    const URL_DATABASE = "https://script.google.com/macros/s/AKfycbw_uYupjggktVbwWcAjYivILQZ8anFGFiEwz8RHdrw20b1HRdtKo-iuiUhxFG2oTxh0/exec"; 
+    const URL_DATABASE = "https://script.google.com/macros/s/AKfycbwDVTZZgCKMKA-dqFbZudnRpkw3I3AyBripPhfbD7dELsK05jhWPbxUnoI0PsZN9IdM/exec"; 
+    let userSesi = JSON.parse(localStorage.getItem("user_sholat"));
 
-    const listWaktu = [
-        { id: "S", nama: "Subuh", jam: "05.00 - 06.00" },
-        { id: "Z", nama: "Zuhur", jam: "12.30 - 15.00" },
-        { id: "A", nama: "Asar", jam: "15.45 - 18.00" },
-        { id: "M", nama: "Magrib", jam: "18.45 - 19.45" },
-        { id: "I", nama: "Isya", jam: "20.00 - 23.00" }
-    ];
-
-    let dataUser = JSON.parse(localStorage.getItem("user_sholat"));
-    let skorLokal = {};
-
-    if (dataUser) {
-        try {
-            let logHariIni = localStorage.getItem("skor_hari_ini_" + dataUser.nim);
-            if (logHariIni) { skorLokal = JSON.parse(logHariIni); }
-        } catch(e) { console.error(e); }
-    } else {
-        logout();
+    // Proteksi: Jika belum login, tendang kembali ke index.html
+    if (!userSesi) {
+        window.location.href = "index.html";
     }
 
+    // Tampilkan data profil siswa ke layar
     $(document).ready(function() {
-        $("#lbl-nama").text(dataUser.nama.toUpperCase());
-        $("#lbl-nim").text(dataUser.nim);
-        $("#lbl-kelas").text("Kelas " + dataUser.kelas);
+        $("#prof-nama").text(userSesi.nama);
+        $("#prof-nim").text(userSesi.nim);
+        $("#prof-kelas").text("Kelas " + userSesi.kelas);
         
-        let opsi = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        $("#lbl-tanggal").text(new Date().toLocaleDateString('id-ID', opsi));
+        let hariFormat = new Intl.DateTimeFormat('id-ID', { dateStyle: 'full' }).format(new Date());
+        $("#prof-tanggal").text(hariFormat);
 
-        renderCardSholat();
-        hitungTotalSkor();
+        renderKartuSholat();
     });
 
-    function renderCardSholat() {
-        let html = "";
-        listWaktu.forEach(w => {
-            let statusText = "Belum Diisi";
-            let badgeStyle = "background:#e9ecef; color:#333;";
-            let isDisable = "";
-            let isUzurDisable = dataUser.jk === "L" ? "disabled" : "";
+    // Generate tampilan panel sholat
+    const listSholat = [
+        { nama: "Subuh", jam: "05.00 - 06.00" },
+        { nama: "Zuhur", jam: "12.30 - 15.00" },
+        { nama: "Asar", jam: "15.45 - 18.00" },
+        { nama: "Magrib", jam: "18.45 - 19.45" },
+        { nama: "Isya", jam: "20.00 - 23.00" }
+    ];
 
-            if (skorLokal[w.id]) {
-                statusText = `Selesai (${skorLokal[w.id].jam})`;
-                badgeStyle = "background:#d1e7dd; color:#0f5132; font-weight:bold;";
-                isDisable = "disabled";
-                isUzurDisable = "disabled";
+    function renderKartuSholat() {
+        let htmlCard = "";
+        listSholat.forEach(s => {
+            // Deteksi jenis kelamin: Sembunyikan kolom tombol Uzur jika Murid Laki-laki (L)
+            let tombolUzurHtml = `<button class="btn-opsi btn-uzur" onclick="simpanSholat('${s.nama}', 'Uzur / Haid')">Uzur/Haid<br><small>Poin 20</small></button>`;
+            
+            if (userSesi.jk === "L" || userSesi.jk === "Laki-laki") {
+                tombolUzurHtml = ""; // Dikoreksi kosong, tidak dibuat tombolnya di layar hp siswa laki-laki
             }
 
-            html += `
-            <div class="sholat-card">
-                <div class="sholat-title">
-                    <span>${w.nama} <span style="font-size:11px; font-weight:normal; color:#666;">(${w.jam})</span></span>
-                    <span class="status-badge" style="${badgeStyle}">${statusText}</span>
+            htmlCard += `
+                <div class="sholat-card">
+                    <div class="sholat-header">
+                        <div>
+                            <span class="sholat-title">${s.nama}</span>
+                            <span class="sholat-time">(${s.jam})</span>
+                        </div>
+                        <span class="sholat-status" id="status-${s.nama}">Belum Diisi</span>
+                    </div>
+                    <div class="opsi-grid" style="${userSesi.jk === 'L' ? 'grid-template-columns: repeat(3, 1fr);' : ''}">
+                        ${tombolUzurHtml}
+                        <button class="btn-opsi btn-awal" onclick="simpanSholat('${s.nama}', 'Awal Waktu')">Awal Waktu<br><small>Poin 15</small></button>
+                        <button class="btn-opsi btn-akhir" onclick="simpanSholat('${s.nama}', 'Akhir Waktu')">Akhir Waktu<br><small>Poin 10</small></button>
+                        <button class="btn-opsi btn-lambat" onclick="simpanSholat('${s.nama}', 'Terlambat')">Terlambat<br><small>Poin 5</small></button>
+                    </div>
                 </div>
-                <div class="grid-tombol">
-                    <button class="btn-poin uzur" ${isUzurDisable} onclick="simpanSiswa('${w.id}', 20, 'Uzur')">Uzur/Haid<span>Poin 20</span></button>
-                    <button class="btn-poin awal" ${isDisable} onclick="simpanSiswa('${w.id}', 15, 'Awal')">Awal Waktu<span>Poin 15</span></button>
-                    <button class="btn-poin akhir" ${isDisable} onclick="simpanSiswa('${w.id}', 10, 'Akhir')">Akhir Waktu<span>Poin 10</span></button>
-                    <button class="btn-poin telat" ${isDisable} onclick="simpanSiswa('${w.id}', 5, 'Terlambat')">Terlambat<span>Poin 5</span></button>
-                </div>
-            </div>`;
+            `;
         });
-        $("#container-sholat").html(html);
+        $("#daftar-sholat").html(htmlCard);
     }
 
-    function hitungTotalSkor() {
-        let total = 0;
-        listWaktu.forEach(w => {
-            if (skorLokal[w.id]) { total += parseInt(skorLokal[w.id].poin); }
-        });
-        $("#total-skor").text(total);
-        return total;
-    }
+    // Fungsi Pengiriman Nilai/Jam Sholat Ke Google Sheets
+    function simpanSholat(sholatNama, statusPilihan) {
+        $("#saving-loader").css("display", "flex");
 
-    function simpanSiswa(waktuId, poinKlik, namaStatus) {
-        let d = new Date();
-        let jamMenit = String(d.getHours()).padStart(2, '0') + "." + String(d.getMinutes()).padStart(2, '0');
-        
-        skorLokal[waktuId] = { poin: poinKlik, jam: jamMenit };
-        let akumulasiSkor = hitungTotalSkor();
+        // Membuat jam otomatis dalam bentuk HH.MM (Misal 05.15)
+        let waktuSekarang = new Date();
+        let jamStr = String(waktuSekarang.getHours()).padStart(2, '0') + "." + String(waktuSekarang.getMinutes()).padStart(2, '0');
 
-        $("#loading").css("display", "flex");
-
-        $.ajax({
-            url: URL_DATABASE,
-            type: "POST",
-            dataType: "json",
-            data: {
-                action: "simpan_sholat",
-                kelas: dataUser.kelas,
-                nim: dataUser.nim,
-                password: waktuId, 
-                jam: jamMenit,
-                total_skor: akumulasiSkor
-            },
-            success: function(res) {
-                $("#loading").hide();
-                if (res.status === "sukses") {
-                    localStorage.setItem("skor_hari_ini_" + dataUser.nim, JSON.stringify(skorLokal));
-                    alert("Berhasil menyimpan data sholat " + waktuId + " (" + namaStatus + ")");
-                    renderCardSholat();
-                } else {
-                    delete skorLokal[waktuId];
-                    hitungTotalSkor();
-                    alert("Gagal menyimpan ke cloud: " + res.pesan);
-                }
-            },
-            error: function() {
-                $("#loading").hide();
-                delete skorLokal[waktuId];
-                hitungTotalSkor();
-                alert("Gagal menghubungi server. Periksa koneksi internet.");
+        $.get(URL_DATABASE, {
+            action: "simpanSholat",
+            kelas: userSesi.kelas,
+            nim: userSesi.nim,
+            sholat: sholatNama,
+            status: statusPilihan,
+            waktu: jamStr
+        }, function(res) {
+            $("#saving-loader").hide();
+            if (res && res.status === "success") {
+                $(`#status-${sholatNama}`).text(statusPilihan).css({"background":"#198754","color":"white"});
+                alert(`Berhasil menyimpan sholat ${sholatNama}! Jam input: ${jamStr}`);
+            } else {
+                alert("Gagal menyimpan data: " + res.message);
             }
+        }, "json").fail(function() {
+            $("#saving-loader").hide();
+            alert("Gagal menghubungi server. Periksa koneksi internet.");
         });
     }
 
