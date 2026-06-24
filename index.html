@@ -63,10 +63,8 @@
 </div>
 
 <script>
-    // ⚠️ PASTIKAN URL WEB APP GOOGLE SCRIPT ANDA DI SINI BERAKHIRAN /exec
     const URL_DATABASE = "https://script.google.com/macros/s/AKfycbwDVTZZgCKMKA-dqFbZudnRpkw3I3AyBripPhfbD7dELsK05jhWPbxUnoI0PsZN9IdM/exec"; 
 
-    // 1. Ambil nama siswa dinamis saat kelas dipilih
     $("#select-kelas").change(function() {
         let kelasDipilih = $(this).val();
         if (!kelasDipilih) {
@@ -88,17 +86,13 @@
             }
         }, "json").fail(function() {
             $("#select-siswa").html('<option value="">Gagal terhubung ke server</option>');
-            alert("Gagal mengunduh daftar nama siswa. Periksa Deployment Apps Script Anda.");
         });
     });
 
-    // 2. Verifikasi Form Login
     $("#form-login").submit(function(e) {
         e.preventDefault();
-        
         let kelas = $("#select-kelas").val();
         let nim = $("#select-siswa").val();
-        let nama = $("#select-siswa option:selected").text();
         let password = $("#input-password").val();
 
         $("#btn-submit").prop("disabled", true);
@@ -114,7 +108,6 @@
             $("#loader").hide();
 
             if (res && res.status === "success") {
-                // Menyimpan seluruh data sesi termasuk jenis kelamin (jk) dari server
                 let sesiUser = { 
                     kelas: res.siswa.kelas, 
                     nim: res.siswa.nim, 
