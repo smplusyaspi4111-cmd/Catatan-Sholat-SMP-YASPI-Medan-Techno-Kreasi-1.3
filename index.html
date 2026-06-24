@@ -76,7 +76,7 @@
 
         $("#select-siswa").html('<option value="">Memuat nama siswa...</option>').prop("disabled", true);
 
-        $.get(URL_DATABASE, { action: "ambil_siswa", kelas: kelasDipilih }, function(data) {
+        $.get(URL_DATABASE, { action: "getSiswa", kelas: kelasDipilih }, function(data) {
             if (data && data.length > 0 && !data[0].error) {
                 let opsi = '<option value="">-- Pilih Nama Anda --</option>';
                 data.forEach(siswa => {
