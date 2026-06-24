@@ -82,13 +82,11 @@
 
     function renderKartuSholat() {
         let htmlCard = "";
-        // Amankan nilai Jenis Kelamin (ubah ke HURUF BESAR)
         let jkSiswa = userSesi.jk ? String(userSesi.jk).toUpperCase().trim() : "";
 
         listSholat.forEach(s => {
             let tombolUzurHtml = `<button class="btn-opsi btn-uzur" onclick="simpanSholat('${s.nama}', 'Uzur / Haid')">Uzur/Haid<br><small>Poin 20</small></button>`;
             
-            // JIKA MURID LAKI-LAKI ("L" atau "LAKI-LAKI"), TOMBOL UZUR DIHAPUS TOTAL
             if (jkSiswa === "L" || jkSiswa === "LAKI-LAKI" || jkSiswa === "LAKI - LAKI") {
                 tombolUzurHtml = ""; 
             }
@@ -120,24 +118,31 @@
         let waktuSekarang = new Date();
         let jamStr = String(waktuSekarang.getHours()).padStart(2, '0') + "." + String(waktuSekarang.getMinutes()).padStart(2, '0');
 
-        $.get(URL_DATABASE, {
-            action: "simpanSholat",
-            kelas: userSesi.kelas,
-            nim: userSesi.nim,
-            sholat: sholatNama,
-            status: statusPilihan,
-            waktu: jamStr
-        }, function(res) {
-            $("#saving-loader").hide();
-            if (res && res.status === "success") {
-                $(`#status-${sholatNama}`).text(statusPilihan).css({"background":"#198754","color":"white"});
-                alert(`Berhasil menyimpan sholat ${sholatNama}! Jam input: ${jamStr}`);
-            } else {
-                alert("Gagal menyimpan data: " + res.message);
+        $.ajax({
+            url: URL_DATABASE,
+            type: "GET",
+            data: {
+                action: "simpanSholat",
+                kelas: userSesi.kelas,
+                nim: userSesi.nim,
+                sholat: sholatNama,
+                status: statusPilihan,
+                waktu: jamStr
+            },
+            dataType: "json",
+            success: function(res) {
+                $("#saving-loader").hide();
+                if (res && res.status === "success") {
+                    $(`#status-${sholatNama}`).text(statusPilihan).css({"background":"#198754","color":"white"});
+                    alert(`Berhasil menyimpan sholat ${sholatNama}! Jam input: ${jamStr}`);
+                } else {
+                    alert("Gagal menyimpan data: " + res.message);
+                }
+            },
+            error: function() {
+                $("#saving-loader").hide();
+                alert("Gagal menghubungi server. Jalur pengiriman data terhalang CORS browser.");
             }
-        }, "json").fail(function() {
-            $("#saving-loader").hide();
-            alert("Gagal menghubungi server. Periksa koneksi internet.");
         });
     }
 
