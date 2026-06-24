@@ -36,12 +36,12 @@
             <label>Pilih Kelas Anda:</label>
             <select class="form-control" id="select-kelas" required>
                 <option value="">-- Pilih Kelas --</option>
-                <option value="7-1">Kelas 7-1</option>
-                <option value="7-2">Kelas 7-2</option>
-                <option value="8-1">Kelas 8-1</option>
-                <option value="8-2">Kelas 8-2</option>
-                <option value="9-1">Kelas 9-1</option>
-                <option value="9-2">Kelas 9-2</option>
+                <option value="Kelas 7-1">Kelas 7-1</option>
+                <option value="Kelas 7-2">Kelas 7-2</option>
+                <option value="Kelas 8-1">Kelas 8-1</option>
+                <option value="Kelas 8-2">Kelas 8-2</option>
+                <option value="Kelas 9-1">Kelas 9-1</option>
+                <option value="Kelas 9-2">Kelas 9-2</option>
             </select>
         </div>
 
@@ -57,16 +57,16 @@
             <input type="password" class="form-control" id="input-password" placeholder="Masukkan sandi" required>
         </div>
 
-        <button type="submit" class="btn-login" id="btn-submit">Masuk Aplikasi ➔</button>
+        <button type="submit" class="btn-login" id="btn-submit">MASUK JURNAL ➔</button>
         <div class="loading-text" id="loader"><i class="fas fa-spinner fa-spin"></i> Menghubungi server...</div>
     </form>
 </div>
 
 <script>
-    // URL Web App Google Script Aktif
-    const URL_DATABASE = "https://script.google.com/macros/s/AKfycbw_uYupjggktVbwWcAjYivILQZ8anFGFiEwz8RHdrw20b1HRdtKo-iuiUhxFG2oTxh0/exec"; 
+    // ⚠️ PASTIKAN URL WEB APP GOOGLE SCRIPT ANDA DI SINI BERAKHIRAN /exec
+    const URL_DATABASE = "https://script.google.com/macros/s/AKfycbwDVTZZgCKMKA-dqFbZudnRpkw3I3AyBripPhfbD7dELsK05jhWPbxUnoI0PsZN9IdM/exec"; 
 
-    // 1. Ambil daftar nama siswa saat kelas dipilih
+    // 1. Ambil nama siswa dinamis saat kelas dipilih
     $("#select-kelas").change(function() {
         let kelasDipilih = $(this).val();
         if (!kelasDipilih) {
@@ -76,9 +76,7 @@
 
         $("#select-siswa").html('<option value="">Memuat nama siswa...</option>').prop("disabled", true);
 
-        // Ambil data menggunakan $.get ke Apps Script
         $.get(URL_DATABASE, { action: "getSiswa", kelas: kelasDipilih }, function(res) {
-            // Memeriksa properti status dari respon objek JSON bawan Apps Script
             if (res && res.status === "success" && res.data.length > 0) {
                 let opsi = '<option value="">-- Pilih Nama Anda --</option>';
                 res.data.forEach(siswa => {
@@ -88,13 +86,13 @@
             } else {
                 $("#select-siswa").html(`<option value="">Gagal: ${res.message || 'Kelas kosong'}</option>`);
             }
-        }, "json").fail(function(err) {
+        }, "json").fail(function() {
             $("#select-siswa").html('<option value="">Gagal terhubung ke server</option>');
-            alert("Gagal mengunduh daftar nama siswa. Pastikan Apps Script Anda di-Deploy sebagai 'Anyone'.");
+            alert("Gagal mengunduh daftar nama siswa. Periksa Deployment Apps Script Anda.");
         });
     });
 
-    // 2. Proses Verifikasi Login Form (Diubah ke $.get agar kompatibel dengan doGet server)
+    // 2. Verifikasi Form Login
     $("#form-login").submit(function(e) {
         e.preventDefault();
         
@@ -106,7 +104,6 @@
         $("#btn-submit").prop("disabled", true);
         $("#loader").show();
 
-        // Menggunakan $.get agar diproses oleh fungsi doGet() Apps Script
         $.get(URL_DATABASE, {
             action: "login",
             kelas: kelas,
@@ -117,15 +114,14 @@
             $("#loader").hide();
 
             if (res && res.status === "success") {
-                // Menyimpan sesi sesuai format kebutuhan halaman sholat.html Bapak
+                // Menyimpan seluruh data sesi termasuk jenis kelamin (jk) dari server
                 let sesiUser = { 
                     kelas: res.siswa.kelas, 
                     nim: res.siswa.nim, 
-                    nama: res.siswa.nama 
+                    nama: res.siswa.nama,
+                    jk: res.siswa.jk
                 };
                 localStorage.setItem("user_sholat", JSON.stringify(sesiUser));
-                
-                alert("Login berhasil! Selamat datang.");
                 window.location.href = "sholat.html";
             } else {
                 alert("Verifikasi Gagal: " + (res.message || "Password salah"));
@@ -133,7 +129,7 @@
         }, "json").fail(function() {
             $("#btn-submit").prop("disabled", false);
             $("#loader").hide();
-            alert("Koneksi server bermasalah atau hak akses script belum disetel ke 'Anyone'.");
+            alert("Koneksi server bermasalah.");
         });
     });
 </script>
