@@ -84,36 +84,40 @@
         { nama: "Isya", jam: "20.00 - 23.00" }
     ];
 
-    function renderKartuSholat() {
-        let htmlCard = "";
-        listSholat.forEach(s => {
-            // Deteksi jenis kelamin: Sembunyikan kolom tombol Uzur jika Murid Laki-laki (L)
-            let tombolUzurHtml = `<button class="btn-opsi btn-uzur" onclick="simpanSholat('${s.nama}', 'Uzur / Haid')">Uzur/Haid<br><small>Poin 20</small></button>`;
-            
-            if (userSesi.jk === "L" || userSesi.jk === "Laki-laki") {
-                tombolUzurHtml = ""; // Dikoreksi kosong, tidak dibuat tombolnya di layar hp siswa laki-laki
-            }
+   function renderKartuSholat() {
+    let htmlCard = "";
+    
+    // Mengamankan data JK: ubah ke huruf besar semua dan hapus spasi tak terlihat
+    let jenisKelaminSiswa = userSesi.jk ? String(userSesi.jk).toUpperCase().trim() : "";
 
-            htmlCard += `
-                <div class="sholat-card">
-                    <div class="sholat-header">
-                        <div>
-                            <span class="sholat-title">${s.nama}</span>
-                            <span class="sholat-time">(${s.jam})</span>
-                        </div>
-                        <span class="sholat-status" id="status-${s.nama}">Belum Diisi</span>
+    listSholat.forEach(s => {
+        let tombolUzurHtml = `<button class="btn-opsi btn-uzur" onclick="simpanSholat('${s.nama}', 'Uzur / Haid')">Uzur/Haid<br><small>Poin 20</small></button>`;
+        
+        // JIKA JENIS KELAMIN ADALAH "L" ATAU "LAKI-LAKI" (Aman dari huruf kecil/besar)
+        if (jenisKelaminSiswa === "L" || jenisKelaminSiswa === "LAKI-LAKI") {
+            tombolUzurHtml = ""; // Tombol uzur resmi dihapus untuk siswa laki-laki
+        }
+
+        htmlCard += `
+            <div class="sholat-card">
+                <div class="sholat-header">
+                    <div>
+                        <span class="sholat-title">${s.nama}</span>
+                        <span class="sholat-time">(${s.jam})</span>
                     </div>
-                    <div class="opsi-grid" style="${userSesi.jk === 'L' ? 'grid-template-columns: repeat(3, 1fr);' : ''}">
-                        ${tombolUzurHtml}
-                        <button class="btn-opsi btn-awal" onclick="simpanSholat('${s.nama}', 'Awal Waktu')">Awal Waktu<br><small>Poin 15</small></button>
-                        <button class="btn-opsi btn-akhir" onclick="simpanSholat('${s.nama}', 'Akhir Waktu')">Akhir Waktu<br><small>Poin 10</small></button>
-                        <button class="btn-opsi btn-lambat" onclick="simpanSholat('${s.nama}', 'Terlambat')">Terlambat<br><small>Poin 5</small></button>
-                    </div>
+                    <span class="sholat-status" id="status-${s.nama}">Belum Diisi</span>
                 </div>
-            `;
-        });
-        $("#daftar-sholat").html(htmlCard);
-    }
+                <div class="opsi-grid" style="${(jenisKelaminSiswa === 'L' || jenisKelaminSiswa === 'LAKI-LAKI') ? 'grid-template-columns: repeat(3, 1fr);' : ''}">
+                    ${tombolUzurHtml}
+                    <button class="btn-opsi btn-awal" onclick="simpanSholat('${s.nama}', 'Awal Waktu')">Awal Waktu<br><small>Poin 15</small></button>
+                    <button class="btn-opsi btn-akhir" onclick="simpanSholat('${s.nama}', 'Akhir Waktu')">Akhir Waktu<br><small>Poin 10</small></button>
+                    <button class="btn-opsi btn-lambat" onclick="simpanSholat('${s.nama}', 'Terlambat')">Terlambat<br><small>Poin 5</small></button>
+                </div>
+            </div>
+        `;
+    });
+    $("#daftar-sholat").html(htmlCard);
+}
 
     // Fungsi Pengiriman Nilai/Jam Sholat Ke Google Sheets
     function simpanSholat(sholatNama, statusPilihan) {
