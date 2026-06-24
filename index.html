@@ -63,7 +63,7 @@
 </div>
 
 <script>
-    // ⚠️ MASUKKAN URL WEB APP GOOGLE SCRIPT BARU ANDA DI SINI
+    // URL Web App Google Script Aktif
     const URL_DATABASE = "https://script.google.com/macros/s/AKfycbwDVTZZgCKMKA-dqFbZudnRpkw3I3AyBripPhfbD7dELsK05jhWPbxUnoI0PsZN9IdM/exec"; 
 
     // 1. Ambil daftar nama siswa saat kelas dipilih
@@ -76,23 +76,25 @@
 
         $("#select-siswa").html('<option value="">Memuat nama siswa...</option>').prop("disabled", true);
 
-        $.get(URL_DATABASE, { action: "getSiswa", kelas: kelasDipilih }, function(data) {
-            if (data && data.length > 0 && !data[0].error) {
+        // Ambil data menggunakan $.get ke Apps Script
+        $.get(URL_DATABASE, { action: "getSiswa", kelas: kelasDipilih }, function(res) {
+            // Memeriksa properti status dari respon objek JSON bawan Apps Script
+            if (res && res.status === "success" && res.data.length > 0) {
                 let opsi = '<option value="">-- Pilih Nama Anda --</option>';
-                data.forEach(siswa => {
+                res.data.forEach(siswa => {
                     opsi += `<option value="${siswa.nim}">${siswa.nama}</option>`;
                 });
                 $("#select-siswa").html(opsi).prop("disabled", false);
             } else {
-                $("#select-siswa").html('<option value="">Gagal memuat data / Kelas kosong</option>');
+                $("#select-siswa").html(`<option value="">Gagal: ${res.message || 'Kelas kosong'}</option>`);
             }
-        }, "json").fail(function() {
+        }, "json").fail(function(err) {
             $("#select-siswa").html('<option value="">Gagal terhubung ke server</option>');
-            alert("Gagal mengunduh daftar nama siswa. Periksa koneksi internet Anda.");
+            alert("Gagal mengunduh daftar nama siswa. Pastikan Apps Script Anda di-Deploy sebagai 'Anyone'.");
         });
     });
 
-    // 2. Proses Verifikasi Login Form
+    // 2. Proses Verifikasi Login Form (Diubah ke $.get agar kompatibel dengan doGet server)
     $("#form-login").submit(function(e) {
         e.preventDefault();
         
@@ -104,8 +106,9 @@
         $("#btn-submit").prop("disabled", true);
         $("#loader").show();
 
-        $.post(URL_DATABASE, {
-            action: "cek_login",
+        // Menggunakan $.get agar diproses oleh fungsi doGet() Apps Script
+        $.get(URL_DATABASE, {
+            action: "login",
             kelas: kelas,
             nim: nim,
             password: password
@@ -113,17 +116,24 @@
             $("#btn-submit").prop("disabled", false);
             $("#loader").hide();
 
-            if (res.status === "sukses") {
-                let sesiUser = { kelas: kelas, nim: nim, nama: nama, jk: res.jk };
+            if (res && res.status === "success") {
+                // Menyimpan sesi sesuai format kebutuhan halaman sholat.html Bapak
+                let sesiUser = { 
+                    kelas: res.siswa.kelas, 
+                    nim: res.siswa.nim, 
+                    nama: res.siswa.nama 
+                };
                 localStorage.setItem("user_sholat", JSON.stringify(sesiUser));
+                
+                alert("Login berhasil! Selamat datang.");
                 window.location.href = "sholat.html";
             } else {
-                alert("Verifikasi Gagal: " + res.pesan);
+                alert("Verifikasi Gagal: " + (res.message || "Password salah"));
             }
         }, "json").fail(function() {
             $("#btn-submit").prop("disabled", false);
             $("#loader").hide();
-            alert("Koneksi server bermasalah.");
+            alert("Koneksi server bermasalah atau hak akses script belum disetel ke 'Anyone'.");
         });
     });
 </script>
