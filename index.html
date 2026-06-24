@@ -63,6 +63,7 @@
 </div>
 
 <script>
+    // Menggunakan link deployment baru milik Bapak yang dikirimkan terakhir
     const URL_DATABASE = "https://script.google.com/macros/s/AKfycbxp5--kcFxG519l-XvIUULN8A_mXkqGk-0estP6x_ylMAti1q0KwPymlpzI4m4HlQfE/exec"; 
 
     $("#select-kelas").change(function() {
@@ -74,18 +75,26 @@
 
         $("#select-siswa").html('<option value="">Memuat nama siswa...</option>').prop("disabled", true);
 
-        $.get(URL_DATABASE, { action: "getSiswa", kelas: kelasDipilih }, function(res) {
-            if (res && res.status === "success" && res.data.length > 0) {
-                let opsi = '<option value="">-- Pilih Nama Anda --</option>';
-                res.data.forEach(siswa => {
-                    opsi += `<option value="${siswa.nim}">${siswa.nama}</option>`;
-                });
-                $("#select-siswa").html(opsi).prop("disabled", false);
-            } else {
-                $("#select-siswa").html(`<option value="">Gagal: ${res.message || 'Kelas kosong'}</option>`);
+        $.ajax({
+            url: URL_DATABASE,
+            type: "GET",
+            data: { action: "getSiswa", kelas: kelasDipilih },
+            dataType: "json",
+            success: function(res) {
+                if (res && res.status === "success" && res.data.length > 0) {
+                    let opsi = '<option value="">-- Pilih Nama Anda --</option>';
+                    res.data.forEach(siswa => {
+                        opsi += `<option value="${siswa.nim}">${siswa.nama}</option>`;
+                    });
+                    $("#select-siswa").html(opsi).prop("disabled", false);
+                } else {
+                    $("#select-siswa").html(`<option value="">Gagal: ${res.message || 'Kelas kosong'}</option>`);
+                }
+            },
+            error: function() {
+                $("#select-siswa").html('<option value="">Gagal terhubung ke server</option>');
+                alert("Gagal mengunduh daftar nama siswa. Pastikan Akses Deployment di-set ke Anyone.");
             }
-        }, "json").fail(function() {
-            $("#select-siswa").html('<option value="">Gagal terhubung ke server</option>');
         });
     });
 
@@ -98,31 +107,33 @@
         $("#btn-submit").prop("disabled", true);
         $("#loader").show();
 
-        $.get(URL_DATABASE, {
-            action: "login",
-            kelas: kelas,
-            nim: nim,
-            password: password
-        }, function(res) {
-            $("#btn-submit").prop("disabled", false);
-            $("#loader").hide();
+        $.ajax({
+            url: URL_DATABASE,
+            type: "GET",
+            data: { action: "login", kelas: kelas, nim: nim, password: password },
+            dataType: "json",
+            success: function(res) {
+                $("#btn-submit").prop("disabled", false);
+                $("#loader").hide();
 
-            if (res && res.status === "success") {
-                let sesiUser = { 
-                    kelas: res.siswa.kelas, 
-                    nim: res.siswa.nim, 
-                    nama: res.siswa.nama,
-                    jk: res.siswa.jk
-                };
-                localStorage.setItem("user_sholat", JSON.stringify(sesiUser));
-                window.location.href = "sholat.html";
-            } else {
-                alert("Verifikasi Gagal: " + (res.message || "Password salah"));
+                if (res && res.status === "success") {
+                    let sesiUser = { 
+                        kelas: res.siswa.kelas, 
+                        nim: res.siswa.nim, 
+                        nama: res.siswa.nama,
+                        jk: res.siswa.jk
+                    };
+                    localStorage.setItem("user_sholat", JSON.stringify(sesiUser));
+                    window.location.href = "sholat.html";
+                } else {
+                    alert("Verifikasi Gagal: " + (res.message || "Password salah"));
+                }
+            },
+            error: function() {
+                $("#btn-submit").prop("disabled", false);
+                $("#loader").hide();
+                alert("Koneksi server bermasalah.");
             }
-        }, "json").fail(function() {
-            $("#btn-submit").prop("disabled", false);
-            $("#loader").hide();
-            alert("Koneksi server bermasalah.");
         });
     });
 </script>
