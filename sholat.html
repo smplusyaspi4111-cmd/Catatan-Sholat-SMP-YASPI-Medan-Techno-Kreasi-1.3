@@ -74,8 +74,10 @@
         $("#prof-kelas").text("Kelas " + userSesi.kelas);
         $("#prof-tanggal").text(new Intl.DateTimeFormat('id-ID', { dateStyle: 'full' }).format(new Date()));
 
-        // Inisialisasi awal agar engine suara browser siap
-        if ('speechSynthesis' in window) { window.speechSynthesis.getVoices(); }
+        // Triger suara di awal agar antrean suara tidak macet di mobile device
+        if ('speechSynthesis' in window) { 
+            window.speechSynthesis.getVoices(); 
+        }
 
         muatDataJurnalDanJadwal();
     });
@@ -104,21 +106,15 @@
         });
     }
 
-    // BARU: Fungsi pintar untuk mengeluarkan suara instruksi AI berbahasa Indonesia
+    // PERBAIKAN UTAMA: Fungsi suara dibuat murni independen dan super responsif
     function bunyikanSuaraInstruksi(teks) {
         if ('speechSynthesis' in window) {
-            // Batalkan suara sebelumnya jika ada yang sedang berjalan
-            window.speechSynthesis.cancel();
+            window.speechSynthesis.cancel(); // Bersihkan memori audio yang menggantung
             
             let ucapan = new SpeechSynthesisUtterance(teks);
-            ucapan.lang = 'id-ID'; // Mengunci agar berbicara bahasa Indonesia baku
-            ucapan.pitch = 1.1;    // Nada suara sedikit ramah ceria
-            ucapan.rate = 0.95;    // Kecepatan artikulasi normal, mudah dipahami anak
-
-            // Cari suara lokal Indonesia bawaan perangkat jika tersedia
-            let daftarSuara = window.speechSynthesis.getVoices();
-            let suaraIndo = daftarSuara.find(v => v.lang.includes('id-ID') || v.lang.includes('id_ID'));
-            if (suaraIndo) { ucapan.voice = suaraIndo; }
+            ucapan.lang = 'id-ID';
+            ucapan.pitch = 1.1;
+            ucapan.rate = 0.9; // Sedikit diperlambat agar pelafalan bahasa Indonesianya sangat jelas
 
             window.speechSynthesis.speak(ucapan);
         }
@@ -170,8 +166,8 @@
 
             let tombolKiriHtml = "";
             if (jkSiswa === "P" || jkSiswa === "PEREMPUAN") {
-                // Di sini pemicu fungsi suara disematkan khusus saat siswi menekan tombol Uzur/Haid
-                tombolKiriHtml = `<button class="btn-opsi btn-uzur btn-aksi-${sNama}" ${!sudahMasukWaktu ? 'disabled' : ''} onclick="simpanSholat('${sNama}', 'Uzur / Haid', this); bunyikanSuaraInstruksi('Silakan sholawat dulu empat kali nak.');">Uzur/Haid<br><small>Poin 20</small></button>`;
+                // DIUBAH: Begitu diklik, bunyikanSuaraInstruksi LANGSUNG dijalankan di detik ke-0 (dianggap user gesture murni) baru jalankan simpanSholat!
+                tombolKiriHtml = `<button class="btn-opsi btn-uzur btn-aksi-${sNama}" ${!sudahMasukWaktu ? 'disabled' : ''} onclick="bunyikanSuaraInstruksi('Silakan sholawat dulu empat kali ya nak.'); simpanSholat('${sNama}', 'Uzur / Haid', this);">Uzur/Haid<br><small>Poin 20</small></button>`;
             } else {
                 tombolKiriHtml = `<button class="btn-opsi btn-jamaah btn-aksi-${sNama}" ${!sudahMasukWaktu ? 'disabled' : ''} onclick="simpanSholat('${sNama}', 'Berjamaah', this)">Berjamaah<br><small>Poin 20</small></button>`;
             }
