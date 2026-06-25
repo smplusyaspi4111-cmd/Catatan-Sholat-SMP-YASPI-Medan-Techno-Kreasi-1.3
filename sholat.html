@@ -85,7 +85,7 @@
     function renderKartuSholat() {
         let htmlCard = "";
         
-        // PENGAMAN DATA JENIS KELAMIN (Agar tidak crash/kosong)
+        // PENGAMAN UTAMA: Cek data Jenis Kelamin agar tidak memicu crash layar putih kosong
         let jkSiswa = "";
         if (userSesi && userSesi.jk) {
             jkSiswa = String(userSesi.jk).toUpperCase().trim();
@@ -94,11 +94,10 @@
         listSholat.forEach(s => {
             let tombolKiriHtml = "";
             
-            // Cek kondisi Berdasarkan Kolom JK di Sheet (P atau PEREMPUAN)
+            // Aturan penentuan tombol Berjamaah (L) atau Uzur/Haid (P)
             if (jkSiswa === "P" || jkSiswa === "PEREMPUAN") {
                 tombolKiriHtml = `<button class="btn-opsi btn-uzur btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Uzur / Haid', this)">Uzur/Haid<br><small>Poin 20</small></button>`;
             } else {
-                // Standar default jika L atau jika data JK tidak sengaja kosong
                 tombolKiriHtml = `<button class="btn-opsi btn-jamaah btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Berjamaah', this)">Berjamaah<br><small>Poin 20</small></button>`;
             }
 
