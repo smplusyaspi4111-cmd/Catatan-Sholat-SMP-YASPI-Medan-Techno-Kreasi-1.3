@@ -81,44 +81,6 @@
         { nama: "Magrib", jam: "18.45 - 19.45" },
         { nama: "Isya", jam: "20.00 - 23.00" }
     ];
-
-    function renderKartuSholat() {
-        let htmlCard = "";
-        let jkSiswa = userSesi.jk ? String(userSesi.jk).toUpperCase().trim() : "";
-
-        listSholat.forEach(s => {
-            let tombolKiriHtml = "";
-            
-            // Cek Jenis Kelamin untuk membedakan Tombol Pertama
-            if (jkSiswa === "P" || jkSiswa === "PEREMPUAN") {
-                // Perempuan mendapat tombol Uzur/Haid Abu-abu
-                tombolKiriHtml = `<button class="btn-opsi btn-uzur btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Uzur / Haid', this)">Uzur/Haid<br><small>Poin 20</small></button>`;
-            } else {
-                // Laki-laki mendapat tombol Berjamaah Biru
-                tombolKiriHtml = `<button class="btn-opsi btn-jamaah btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Awal Waktu', this)">Berjamaah<br><small>Poin 20</small></button>`;
-            }
-
-            htmlCard += `
-                <div class="sholat-card">
-                    <div class="sholat-header">
-                        <div>
-                            <span class="sholat-title">${s.nama}</span>
-                            <span class="sholat-time">(${s.jam})</span>
-                        </div>
-                        <span class="sholat-status" id="status-${s.nama}">Belum Diisi</span>
-                    </div>
-                    <div class="opsi-grid">
-                        ${tombolKiriHtml}
-                        <button class="btn-opsi btn-awal btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Awal Waktu', this)">Awal Waktu<br><small>Poin 15</small></button>
-                        <button class="btn-opsi btn-akhir btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Akhir Waktu', this)">Akhir Waktu<br><small>Poin 10</small></button>
-                        <button class="btn-opsi btn-lambat btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Terlambat', this)">Terlambat<br><small>Poin 5</small></button>
-                    </div>
-                </div>
-            `;
-        });
-        $("#daftar-sholat").html(htmlCard);
-    }
-
     function simpanSholat(sholatNama, statusPilihan, elemenTombol) {
         $("#saving-loader").css("display", "flex");
 
@@ -157,7 +119,6 @@
             }
         });
     }
-
     function logout() {
         localStorage.removeItem("user_sholat");
         window.location.href = "index.html";
