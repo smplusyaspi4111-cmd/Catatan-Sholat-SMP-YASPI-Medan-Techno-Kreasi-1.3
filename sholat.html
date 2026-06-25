@@ -25,10 +25,12 @@
         .opsi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
         .btn-opsi { border: none; padding: 10px 5px; border-radius: 8px; color: white; font-size: 11px; font-weight: bold; cursor: pointer; text-align: center; transition: 0.2s; }
         .btn-uzur { background: #6c757d; }
+        .btn-jamaah { background: #0d6efd; } /* Warna Biru untuk Berjamaah Laki-laki */
         .btn-awal { background: #198754; }
         .btn-akhir { background: #ffc107; color: #212529; }
         .btn-lambat { background: #dc3545; }
-        .btn-opsi:hover { opacity: 0.85; transform: scale(1.02); }
+        .btn-opsi:hover:not(:disabled) { opacity: 0.85; transform: scale(1.02); }
+        .btn-opsi:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
         .loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; justify-content: center; align-items: center; color: white; flex-direction: column; font-size: 14px; }
     </style>
 </head>
@@ -85,10 +87,15 @@
         let jkSiswa = userSesi.jk ? String(userSesi.jk).toUpperCase().trim() : "";
 
         listSholat.forEach(s => {
-            let tombolUzurHtml = `<button class="btn-opsi btn-uzur" onclick="simpanSholat('${s.nama}', 'Uzur / Haid')">Uzur/Haid<br><small>Poin 20</small></button>`;
+            let tombolKiriHtml = "";
             
-            if (jkSiswa === "L" || jkSiswa === "LAKI-LAKI" || jkSiswa === "LAKI - LAKI") {
-                tombolUzurHtml = ""; 
+            // Cek Jenis Kelamin untuk membedakan Tombol Pertama
+            if (jkSiswa === "P" || jkSiswa === "PEREMPUAN") {
+                // Perempuan mendapat tombol Uzur/Haid Abu-abu
+                tombolKiriHtml = `<button class="btn-opsi btn-uzur btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Uzur / Haid', this)">Uzur/Haid<br><small>Poin 20</small></button>`;
+            } else {
+                // Laki-laki mendapat tombol Berjamaah Biru
+                tombolKiriHtml = `<button class="btn-opsi btn-jamaah btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Awal Waktu', this)">Berjamaah<br><small>Poin 20</small></button>`;
             }
 
             htmlCard += `
@@ -100,11 +107,11 @@
                         </div>
                         <span class="sholat-status" id="status-${s.nama}">Belum Diisi</span>
                     </div>
-                    <div class="opsi-grid" style="${tombolUzurHtml === '' ? 'grid-template-columns: repeat(3, 1fr);' : ''}">
-                        ${tombolUzurHtml}
-                        <button class="btn-opsi btn-awal" onclick="simpanSholat('${s.nama}', 'Awal Waktu')">Awal Waktu<br><small>Poin 15</small></button>
-                        <button class="btn-opsi btn-akhir" onclick="simpanSholat('${s.nama}', 'Akhir Waktu')">Akhir Waktu<br><small>Poin 10</small></button>
-                        <button class="btn-opsi btn-lambat" onclick="simpanSholat('${s.nama}', 'Terlambat')">Terlambat<br><small>Poin 5</small></button>
+                    <div class="opsi-grid">
+                        ${tombolKiriHtml}
+                        <button class="btn-opsi btn-awal btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Awal Waktu', this)">Awal Waktu<br><small>Poin 15</small></button>
+                        <button class="btn-opsi btn-akhir btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Akhir Waktu', this)">Akhir Waktu<br><small>Poin 10</small></button>
+                        <button class="btn-opsi btn-lambat btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Terlambat', this)">Terlambat<br><small>Poin 5</small></button>
                     </div>
                 </div>
             `;
@@ -112,11 +119,8 @@
         $("#daftar-sholat").html(htmlCard);
     }
 
-    function simpanSholat(sholatNama, statusPilihan) {
+    function simpanSholat(sholatNama, statusPilihan, elemenTombol) {
         $("#saving-loader").css("display", "flex");
-
-        let waktuSekarang = new Date();
-        let jamStr = String(waktuSekarang.getHours()).padStart(2, '0') + "." + String(waktuSekarang.getMinutes()).padStart(2, '0');
 
         $.ajax({
             url: URL_DATABASE,
@@ -126,22 +130,30 @@
                 kelas: userSesi.kelas,
                 nim: userSesi.nim,
                 sholat: sholatNama,
-                status: statusPilihan,
-                waktu: jamStr
+                status: statusPilihan
             },
             dataType: "json",
             success: function(res) {
                 $("#saving-loader").hide();
                 if (res && res.status === "success") {
-                    $(`#status-${sholatNama}`).text(statusPilihan).css({"background":"#198754","color":"white"});
-                    alert(`Berhasil menyimpan sholat ${sholatNama}! Jam input: ${jamStr}`);
+                    // 1. Ubah teks status di pojok kanan atas kartu
+                    let teksTampil = statusPilihan;
+                    if($(elemenTombol).hasClass('btn-jamaah')) {
+                        teksTampil = "Berjamaah";
+                    }
+                    $(`#status-${sholatNama}`).text(teksTampil).css({"background":"#198754","color":"white"});
+                    
+                    // 2. Kunci seluruh tombol pada baris sholat ini agar tidak bisa diklik lagi
+                    $(`.btn-aksi-${sholatNama}`).prop("disabled", true);
+                    
+                    alert(`Berhasil menyimpan data sholat ${sholatNama}!`);
                 } else {
                     alert("Gagal menyimpan data: " + res.message);
                 }
             },
             error: function() {
                 $("#saving-loader").hide();
-                alert("Gagal menghubungi server. Jalur pengiriman data terhalang CORS browser.");
+                alert("Gagal menghubungi server.");
             }
         });
     }
