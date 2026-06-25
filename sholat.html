@@ -18,6 +18,7 @@
         .profil-value { font-weight: bold; color: #333; }
         .sholat-container { max-width: 650px; margin: 0 auto; width: 92%; }
         .sholat-card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .sholat-card.belum-masuk { opacity: 0.65; position: relative; }
         .sholat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 1px solid #eee; }
         .sholat-title { font-weight: bold; font-size: 17px; color: var(--primary); }
         .sholat-status { font-size: 12px; padding: 4px 10px; background: #e9ecef; border-radius: 20px; color: #666; font-weight: bold; }
@@ -73,6 +74,9 @@
         $("#prof-kelas").text("Kelas " + userSesi.kelas);
         $("#prof-tanggal").text(new Intl.DateTimeFormat('id-ID', { dateStyle: 'full' }).format(new Date()));
 
+        // Inisialisasi awal agar engine suara browser siap
+        if ('speechSynthesis' in window) { window.speechSynthesis.getVoices(); }
+
         muatDataJurnalDanJadwal();
     });
 
@@ -100,14 +104,36 @@
         });
     }
 
+    // BARU: Fungsi pintar untuk mengeluarkan suara instruksi AI berbahasa Indonesia
+    function bunyikanSuaraInstruksi(teks) {
+        if ('speechSynthesis' in window) {
+            // Batalkan suara sebelumnya jika ada yang sedang berjalan
+            window.speechSynthesis.cancel();
+            
+            let ucapan = new SpeechSynthesisUtterance(teks);
+            ucapan.lang = 'id-ID'; // Mengunci agar berbicara bahasa Indonesia baku
+            ucapan.pitch = 1.1;    // Nada suara sedikit ramah ceria
+            ucapan.rate = 0.95;    // Kecepatan artikulasi normal, mudah dipahami anak
+
+            // Cari suara lokal Indonesia bawaan perangkat jika tersedia
+            let daftarSuara = window.speechSynthesis.getVoices();
+            let suaraIndo = daftarSuara.find(v => v.lang.includes('id-ID') || v.lang.includes('id_ID'));
+            if (suaraIndo) { ucapan.voice = suaraIndo; }
+
+            window.speechSynthesis.speak(ucapan);
+        }
+    }
+
     function prosesRenderHalaman(jadwal, dataJurnal) {
         let htmlCard = "";
         let jkSiswa = userSesi.jk ? String(userSesi.jk).toUpperCase().trim() : "";
 
-        // PERBAIKAN FIQIH: Kurangi 10 menit dari waktu Subuh besok untuk batas akhir Isya
+        let sekarang = new Date();
+        let jamSekarangMenit = sekarang.getHours() * 60 + sekarang.getMinutes();
+
         let subuhMenit = koverJamKeMenit(jadwal.Subuh);
         let batasIsyaMenit = subuhMenit - 10;
-        if (batasIsyaMenit < 0) { batasIsyaMenit += 1440; } // Antisipasi putaran waktu
+        if (batasIsyaMenit < 0) { batasIsyaMenit += 1440; }
         let jamAkhirIsyaFikih = konversiMenitKeJamStr(batasIsyaMenit);
 
         const batasWaktu = {
@@ -123,21 +149,41 @@
         daftarWaktu.forEach(sNama => {
             let jamMulai = jadwal[sNama];
             let jamAkhir = batasWaktu[sNama];
-
             let rentang = hitungPembagianWaktuTiga(jamMulai, jamAkhir);
+
+            let menitMulaiSholat = koverJamKeMenit(jamMulai);
+            let sudahMasukWaktu = false;
+
+            if (sNama === "Isya") {
+                let menitAkhirIsya = koverJamKeMenit(jamAkhirIsyaFikih);
+                if (menitAkhirIsya < menitMulaiSholat) { menitAkhirIsya += 1440; }
+                let jamSekarangIsya = jamSekarangMenit;
+                if (jamSekarangIsya < menitMulaiSholat && jamSekarangIsya <= menitAkhirIsya) {
+                    jamSekarangIsya += 1440;
+                }
+                if (jamSekarangIsya >= menitMulaiSholat && jamSekarangIsya <= menitAkhirIsya) {
+                    sudahMasukWaktu = true;
+                }
+            } else {
+                if (jamSekarangMenit >= menitMulaiSholat) { sudahMasukWaktu = true; }
+            }
 
             let tombolKiriHtml = "";
             if (jkSiswa === "P" || jkSiswa === "PEREMPUAN") {
-                tombolKiriHtml = `<button class="btn-opsi btn-uzur btn-aksi-${sNama}" onclick="simpanSholat('${sNama}', 'Uzur / Haid', this)">Uzur/Haid<br><small>Poin 20</small></button>`;
+                // Di sini pemicu fungsi suara disematkan khusus saat siswi menekan tombol Uzur/Haid
+                tombolKiriHtml = `<button class="btn-opsi btn-uzur btn-aksi-${sNama}" ${!sudahMasukWaktu ? 'disabled' : ''} onclick="simpanSholat('${sNama}', 'Uzur / Haid', this); bunyikanSuaraInstruksi('Silakan sholawat dulu empat kali nak.');">Uzur/Haid<br><small>Poin 20</small></button>`;
             } else {
-                tombolKiriHtml = `<button class="btn-opsi btn-jamaah btn-aksi-${sNama}" onclick="simpanSholat('${sNama}', 'Berjamaah', this)">Berjamaah<br><small>Poin 20</small></button>`;
+                tombolKiriHtml = `<button class="btn-opsi btn-jamaah btn-aksi-${sNama}" ${!sudahMasukWaktu ? 'disabled' : ''} onclick="simpanSholat('${sNama}', 'Berjamaah', this)">Berjamaah<br><small>Poin 20</small></button>`;
             }
 
+            let statusTeksAwal = sudahMasukWaktu ? "Belum Diisi" : "Belum Masuk Waktu";
+            let classTambahanCard = sudahMasukWaktu ? "" : "belum-masuk";
+
             htmlCard += `
-                <div class="sholat-card">
+                <div class="sholat-card ${classTambahanCard}" onclick="${!sudahMasukWaktu ? `alert('Afwan, waktu sholat ${sNama} belum dimulai!')` : ''}">
                     <div class="sholat-header">
                         <span class="sholat-title">${sNama} <span style="font-weight:normal; margin-left:5px; color:#555;">${jamMulai}</span></span>
-                        <span class="sholat-status" id="status-${sNama}">Belum Diisi</span>
+                        <span class="sholat-status" id="status-${sNama}" style="${!sudahMasukWaktu ? 'background:#f8d7da; color:#721c24;' : ''}">${statusTeksAwal}</span>
                     </div>
                     <div class="opsi-grid">
                         <div class="kolom-tombol">
@@ -145,17 +191,17 @@
                         </div>
                         
                         <div class="kolom-tombol">
-                            <button class="btn-opsi btn-awal btn-aksi-${sNama}" onclick="simpanSholat('${sNama}', 'Awal Waktu', this)">Awal Waktu<br><small>Poin 15</small></button>
+                            <button class="btn-opsi btn-awal btn-aksi-${sNama}" ${!sudahMasukWaktu ? 'disabled' : ''} onclick="simpanSholat('${sNama}', 'Awal Waktu', this); event.stopPropagation();">Awal Waktu<br><small>Poin 15</small></button>
                             <div class="txt-rentang-jam">(${rentang.awalStart} - ${rentang.awalEnd})</div>
                         </div>
                         
                         <div class="kolom-tombol">
-                            <button class="btn-opsi btn-pertengahan btn-aksi-${sNama}" onclick="simpanSholat('${sNama}', 'Pertengahan Waktu', this)">Pertengahan<br><small>Poin 10</small></button>
+                            <button class="btn-opsi btn-pertengahan btn-aksi-${sNama}" ${!sudahMasukWaktu ? 'disabled' : ''} onclick="simpanSholat('${sNama}', 'Pertengahan Waktu', this); event.stopPropagation();">Pertengahan<br><small>Poin 10</small></button>
                             <div class="txt-rentang-jam">(${rentang.tengahStart} - ${rentang.tengahEnd})</div>
                         </div>
                         
                         <div class="kolom-tombol">
-                            <button class="btn-opsi btn-akhir btn-aksi-${sNama}" onclick="simpanSholat('${sNama}', 'Akhir Waktu', this)">Akhir Waktu<br><small>Poin 5</small></button>
+                            <button class="btn-opsi btn-akhir btn-aksi-${sNama}" ${!sudahMasukWaktu ? 'disabled' : ''} onclick="simpanSholat('${sNama}', 'Akhir Waktu', this); event.stopPropagation();">Akhir Waktu<br><small>Poin 5</small></button>
                             <div class="txt-rentang-jam">(${rentang.akhirStart} - ${rentang.akhirEnd})</div>
                         </div>
                     </div>
@@ -178,6 +224,7 @@
 
                 $(`#status-${sNama}`).text(teksStatus).css({"background":"#198754","color":"white"});
                 $(`.btn-aksi-${sNama}`).prop("disabled", true);
+                $(`#status-${sNama}`).closest('.sholat-card').attr('onclick', '');
             }
         });
     }
@@ -186,7 +233,6 @@
         let menitStart = koverJamKeMenit(startStr);
         let menitEnd = koverJamKeMenit(endStr);
         
-        // Handling jika waktu melewati tengah malam (khusus Isya)
         if (menitEnd < menitStart) { menitEnd += 1440; }
         
         let totalDurasi = menitEnd - menitStart;
@@ -230,6 +276,7 @@
                 if (res && res.status === "success") {
                     $(`#status-${sholatNama}`).text(statusPilihan).css({"background":"#198754","color":"white"});
                     $(`.btn-aksi-${sholatNama}`).prop("disabled", true);
+                    $(`#status-${sholatNama}`).closest('.sholat-card').attr('onclick', '');
                     alert(`Berhasil menyimpan data sholat ${sholatNama}!`);
                 } else {
                     alert("Gagal: " + res.message);
