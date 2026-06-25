@@ -25,7 +25,7 @@
         .opsi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
         .btn-opsi { border: none; padding: 10px 5px; border-radius: 8px; color: white; font-size: 11px; font-weight: bold; cursor: pointer; text-align: center; transition: 0.2s; }
         .btn-uzur { background: #6c757d; }
-        .btn-jamaah { background: #0d6efd; } /* Warna Biru untuk Berjamaah Laki-laki */
+        .btn-jamaah { background: #0d6efd; }
         .btn-awal { background: #198754; }
         .btn-akhir { background: #ffc107; color: #212529; }
         .btn-lambat { background: #dc3545; }
@@ -81,6 +81,41 @@
         { nama: "Magrib", jam: "18.45 - 19.45" },
         { nama: "Isya", jam: "20.00 - 23.00" }
     ];
+
+    function renderKartuSholat() {
+        let htmlCard = "";
+        let jkSiswa = userSesi.jk ? String(userSesi.jk).toUpperCase().trim() : "";
+
+        listSholat.forEach(s => {
+            let tombolKiriHtml = "";
+            
+            if (jkSiswa === "P" || jkSiswa === "PEREMPUAN") {
+                tombolKiriHtml = `<button class="btn-opsi btn-uzur btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Uzur / Haid', this)">Uzur/Haid<br><small>Poin 20</small></button>`;
+            } else {
+                tombolKiriHtml = `<button class="btn-opsi btn-jamaah btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Berjamaah', this)">Berjamaah<br><small>Poin 20</small></button>`;
+            }
+
+            htmlCard += `
+                <div class="sholat-card">
+                    <div class="sholat-header">
+                        <div>
+                            <span class="sholat-title">${s.nama}</span>
+                            <span class="sholat-time">(${s.jam})</span>
+                        </div>
+                        <span class="sholat-status" id="status-${s.nama}">Belum Diisi</span>
+                    </div>
+                    <div class="opsi-grid">
+                        ${tombolKiriHtml}
+                        <button class="btn-opsi btn-awal btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Awal Waktu', this)">Awal Waktu<br><small>Poin 15</small></button>
+                        <button class="btn-opsi btn-akhir btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Akhir Waktu', this)">Akhir Waktu<br><small>Poin 10</small></button>
+                        <button class="btn-opsi btn-lambat btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Terlambat', this)">Terlambat<br><small>Poin 5</small></button>
+                    </div>
+                </div>
+            `;
+        });
+        $("#daftar-sholat").html(htmlCard);
+    }
+
     function simpanSholat(sholatNama, statusPilihan, elemenTombol) {
         $("#saving-loader").css("display", "flex");
 
@@ -98,16 +133,12 @@
             success: function(res) {
                 $("#saving-loader").hide();
                 if (res && res.status === "success") {
-                    // 1. Ubah teks status di pojok kanan atas kartu
                     let teksTampil = statusPilihan;
                     if($(elemenTombol).hasClass('btn-jamaah')) {
                         teksTampil = "Berjamaah";
                     }
                     $(`#status-${sholatNama}`).text(teksTampil).css({"background":"#198754","color":"white"});
-                    
-                    // 2. Kunci seluruh tombol pada baris sholat ini agar tidak bisa diklik lagi
                     $(`.btn-aksi-${sholatNama}`).prop("disabled", true);
-                    
                     alert(`Berhasil menyimpan data sholat ${sholatNama}!`);
                 } else {
                     alert("Gagal menyimpan data: " + res.message);
@@ -115,10 +146,11 @@
             },
             error: function() {
                 $("#saving-loader").hide();
-                alert("Gagal menghubungi server.");
+                alert("Gagal menghubungi server. Periksa koneksi internet.");
             }
         });
     }
+
     function logout() {
         localStorage.removeItem("user_sholat");
         window.location.href = "index.html";
