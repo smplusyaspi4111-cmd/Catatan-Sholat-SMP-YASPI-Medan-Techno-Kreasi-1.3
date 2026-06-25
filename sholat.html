@@ -74,9 +74,12 @@
         $("#prof-kelas").text("Kelas " + userSesi.kelas);
         $("#prof-tanggal").text(new Intl.DateTimeFormat('id-ID', { dateStyle: 'full' }).format(new Date()));
 
-        // Triger suara di awal agar antrean suara tidak macet di mobile device
-        if ('speechSynthesis' in window) { 
-            window.speechSynthesis.getVoices(); 
+        // Paksa browser desktop memuat daftar suara di awal loading halaman
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.getVoices();
+            if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                window.speechSynthesis.onvoiceschanged = function() { window.speechSynthesis.getVoices(); };
+            }
         }
 
         muatDataJurnalDanJadwal();
@@ -106,17 +109,27 @@
         });
     }
 
-    // PERBAIKAN UTAMA: Fungsi suara dibuat murni independen dan super responsif
+    // PERBAIKAN STABILITAS AUDIO: Deteksi mendalam paket bahasa Indonesia pada sistem operasi
     function bunyikanSuaraInstruksi(teks) {
         if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel(); // Bersihkan memori audio yang menggantung
-            
-            let ucapan = new SpeechSynthesisUtterance(teks);
-            ucapan.lang = 'id-ID';
-            ucapan.pitch = 1.1;
-            ucapan.rate = 0.9; // Sedikit diperlambat agar pelafalan bahasa Indonesianya sangat jelas
+            window.speechSynthesis.cancel(); // Reset paksa engine audio browser
 
-            window.speechSynthesis.speak(ucapan);
+            setTimeout(function() {
+                let ucapan = new SpeechSynthesisUtterance(teks);
+                ucapan.lang = 'id-ID';
+                ucapan.pitch = 1.0;
+                ucapan.rate = 0.9;
+
+                // Cari kecocokan database suara Indonesia di dalam Laptop/HP
+                let daftarSuara = window.speechSynthesis.getVoices();
+                let suaraIndo = daftarSuara.find(voice => voice.lang.includes('id-ID') || voice.lang.includes('id_ID'));
+                
+                if (suaraIndo) {
+                    ucapan.voice = suaraIndo;
+                }
+                
+                window.speechSynthesis.speak(ucapan);
+            }, 50); // Delay mikro 50ms untuk memastikan memori audio siap melafalkan teks
         }
     }
 
@@ -166,7 +179,6 @@
 
             let tombolKiriHtml = "";
             if (jkSiswa === "P" || jkSiswa === "PEREMPUAN") {
-                // DIUBAH: Begitu diklik, bunyikanSuaraInstruksi LANGSUNG dijalankan di detik ke-0 (dianggap user gesture murni) baru jalankan simpanSholat!
                 tombolKiriHtml = `<button class="btn-opsi btn-uzur btn-aksi-${sNama}" ${!sudahMasukWaktu ? 'disabled' : ''} onclick="bunyikanSuaraInstruksi('Silakan sholawat dulu empat kali ya nak.'); simpanSholat('${sNama}', 'Uzur / Haid', this);">Uzur/Haid<br><small>Poin 20</small></button>`;
             } else {
                 tombolKiriHtml = `<button class="btn-opsi btn-jamaah btn-aksi-${sNama}" ${!sudahMasukWaktu ? 'disabled' : ''} onclick="simpanSholat('${sNama}', 'Berjamaah', this)">Berjamaah<br><small>Poin 20</small></button>`;
@@ -273,7 +285,13 @@
                     $(`#status-${sholatNama}`).text(statusPilihan).css({"background":"#198754","color":"white"});
                     $(`.btn-aksi-${sholatNama}`).prop("disabled", true);
                     $(`#status-${sholatNama}`).closest('.sholat-card').attr('onclick', '');
-                    alert(`Berhasil menyimpan data sholat ${sholatNama}!`);
+                    
+                    let pesanAlert = `Berhasil menyimpan data sholat ${sholatNama}!`;
+                    if (statusPilihan === 'Uzur / Haid') {
+                        pesanAlert += `\n\nSebagai gantinya Kamu harus Sholawat 4 kali\n{Allahumma sholli 'ala Saidina Muhammad 4 x}`;
+                    }
+                    
+                    alert(pesanAlert);
                 } else {
                     alert("Gagal: " + res.message);
                 }
