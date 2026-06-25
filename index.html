@@ -3,38 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masuk - Jurnal Sholat Digital</title>
+    <title>Login - Jurnal Sholat Digital</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root { --primary: #0f5132; --secondary: #198754; --bg: #f8f9fa; }
+        :root { --primary: #0f5132; --secondary: #198754; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
-        body { background-color: var(--primary); padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .login-container { background: white; width: 100%; max-width: 400px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); padding: 25px; }
-        .logo-box { text-align: center; margin-bottom: 20px; color: var(--primary); }
-        .logo-box i { font-size: 50px; margin-bottom: 10px; }
+        body { background: #f1f3f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 15px; }
+        .login-card { background: white; width: 100%; max-width: 400px; padding: 25px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); border-top: 6px solid var(--primary); }
+        .logo-area { text-align: center; margin-bottom: 20px; color: var(--primary); }
+        .logo-area h2 { font-size: 20px; font-weight: bold; margin-top: 5px; }
+        .logo-area p { font-size: 13px; color: #666; }
         .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #333; }
-        .form-control { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; outline: none; }
-        .form-control:focus { border-color: var(--secondary); }
-        .btn-login { width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 10px; }
-        .btn-login:hover { background: var(--secondary); }
-        .loading-text { display: none; text-align: center; color: var(--secondary); font-size: 13px; margin-top: 10px; }
+        .form-group label { display: block; font-size: 13px; font-weight: bold; color: #444; margin-bottom: 5px; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; outline: none; }
+        .form-control:focus { border-color: var(--secondary); box-shadow: 0 0 5px rgba(25,135,84,0.2); }
+        .btn-submit { width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+        .btn-submit:hover { background: var(--secondary); }
+        .loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: center; color: white; font-size: 14px; flex-direction: column; }
+        
+        /* Gaya Panel Auto Login */
+        .auto-login-panel { text-align: center; display: none; padding: 10px 0; }
+        .welcome-text { font-size: 15px; margin-bottom: 15px; color: #333; }
+        .welcome-text strong { color: var(--primary); }
+        .btn-switch { background: none; border: none; color: #dc3545; font-size: 13px; cursor: pointer; text-decoration: underline; margin-top: 15px; display: inline-block; }
     </style>
 </head>
 <body>
 
-<div class="login-container">
-    <div class="logo-box">
-        <i class="fas fa-mosque"></i>
-        <h2>SMP YASPI MEDAN</h2>
-        <p style="font-size: 12px; color: #666;">Jurnal Mutabaah Sholat Digital</p>
+<div class="login-card">
+    <div class="logo-area">
+        <i class="fas fa-mosque fa-2x"></i>
+        <h2>JURNAL SHOLAT DIGITAL</h2>
+        <p>SMP Yaspi</p>
     </div>
 
-    <form id="form-login">
+    <div id="panel-auto-login" class="auto-login-panel">
+        <div class="welcome-text">
+            Selamat datang kembali,<br>
+            <strong id="auto-nama-siswa">-</strong>
+        </div>
+        <button class="btn-submit" onclick="masukLangsung()"><i class="fas fa-door-open"></i> Masuk Jurnal Sholat</button>
+        <button class="btn-switch" onclick="gantiAkun()"><i class="fas fa-user-sync"></i> Masuk dengan Akun Lain</button>
+    </div>
+
+    <form id="form-login-utama">
         <div class="form-group">
-            <label>Pilih Kelas Anda:</label>
-            <select class="form-control" id="select-kelas" required>
+            <label>Pilih Kelas</label>
+            <select class="form-control" id="input-kelas">
                 <option value="">-- Pilih Kelas --</option>
                 <option value="Kelas 7-1">Kelas 7-1</option>
                 <option value="Kelas 7-2">Kelas 7-2</option>
@@ -46,96 +62,137 @@
         </div>
 
         <div class="form-group">
-            <label>Nama Lengkap Murid:</label>
-            <select class="form-control" id="select-siswa" required disabled>
-                <option value="">-- Pilih Kelas Terlebih Dahulu --</option>
+            <label>Nama Siswa</label>
+            <select class="form-control" id="input-siswa" disabled>
+                <option value="">-- Pilih Nama Anda --</option>
             </select>
         </div>
 
         <div class="form-group">
-            <label>Password Pengaman:</label>
-            <input type="password" class="form-control" id="input-password" placeholder="Masukkan sandi" required>
+            <label>Password (Pertama kali login = Buat Password Baru)</label>
+            <input type="password" class="form-control" id="input-password" placeholder="Masukkan password...">
         </div>
 
-        <button type="submit" class="btn-login" id="btn-submit">MASUK JURNAL ➔</button>
-        <div class="loading-text" id="loader"><i class="fas fa-spinner fa-spin"></i> Menghubungi server...</div>
+        <button type="submit" class="btn-submit" id="btn-login-aksi"><i class="fas fa-sign-in-alt"></i> Masuk & Simpan Akun</button>
     </form>
 </div>
 
-<script>
-    // Menggunakan link deployment baru milik Bapak yang dikirimkan terakhir
-    const URL_DATABASE = "https://script.google.com/macros/s/AKfycbxp5--kcFxG519l-XvIUULN8A_mXkqGk-0estP6x_ylMAti1q0KwPymlpzI4m4HlQfE/exec"; 
+<div class="loading-overlay" id="proses-loader">
+    <i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom: 10px;"></i>
+    <span id="loader-text">Memproses data...</span>
+</div>
 
-    $("#select-kelas").change(function() {
-        let kelasDipilih = $(this).val();
-        if (!kelasDipilih) {
-            $("#select-siswa").html('<option value="">-- Pilih Kelas Terlebih Dahulu --</option>').prop("disabled", true);
-            return;
+<script>
+    const URL_DATABASE = "https://script.google.com/macros/s/AKfycbxp5--kcFxG519l-XvIUULN8A_mXkqGk-0estP6x_ylMAti1q0KwPymlpzI4m4HlQfE/exec"; 
+    let daftarSiswaLokal = [];
+
+    $(document).ready(function() {
+        // Cek Sesi Login Sebelumnya di HP Siswa
+        let userTersemat = localStorage.getItem("user_sholat");
+        if (userTersemat) {
+            let dataSesi = JSON.parse(userTersemat);
+            $("#form-login-utama").hide();
+            $("#auto-nama-siswa").text(dataSesi.nama + " (" + dataSesi.nim + ")");
+            $("#panel-auto-login").show();
         }
 
-        $("#select-siswa").html('<option value="">Memuat nama siswa...</option>').prop("disabled", true);
-
-        $.ajax({
-            url: URL_DATABASE,
-            type: "GET",
-            data: { action: "getSiswa", kelas: kelasDipilih },
-            dataType: "json",
-            success: function(res) {
-                if (res && res.status === "success" && res.data.length > 0) {
-                    let opsi = '<option value="">-- Pilih Nama Anda --</option>';
-                    res.data.forEach(siswa => {
-                        opsi += `<option value="${siswa.nim}">${siswa.nama}</option>`;
-                    });
-                    $("#select-siswa").html(opsi).prop("disabled", false);
-                } else {
-                    $("#select-siswa").html(`<option value="">Gagal: ${res.message || 'Kelas kosong'}</option>`);
-                }
-            },
-            error: function() {
-                $("#select-siswa").html('<option value="">Gagal terhubung ke server</option>');
-                alert("Gagal mengunduh daftar nama siswa. Pastikan Akses Deployment di-set ke Anyone.");
+        // Event saat kelas diubah
+        $("#input-kelas").change(function() {
+            let kelasTerpilih = $(this).val();
+            if (!kelasTerpilih) {
+                $("#input-siswa").html('<option value="">-- Pilih Nama Anda --</option>').prop("disabled", true);
+                return;
             }
+
+            $("#proses-loader").css("display", "flex");
+            $("#loader-text").text("Mengambil data siswa...");
+
+            $.ajax({
+                url: URL_DATABASE,
+                type: "GET",
+                data: { action: "getSiswa", kelas: kelasTerpilih },
+                dataType: "json",
+                success: function(res) {
+                    $("#proses-loader").hide();
+                    if (res && res.status === "success") {
+                        daftarSiswaLokal = res.data;
+                        let opsiHtml = '<option value="">-- Pilih Nama Anda --</option>';
+                        res.data.forEach(m => {
+                            opsiHtml += `<option value="${m.nim}">${m.nama}</option>`;
+                        });
+                        $("#input-siswa").html(opsiHtml).prop("disabled", false);
+                    } else {
+                        alert("Gagal mengambil daftar siswa: " + res.message);
+                    }
+                },
+                error: function() {
+                    $("#proses-loader").hide();
+                    alert("Gagal memuat data siswa. Cek jaringan internet!");
+                }
+            });
+        });
+
+        // Event Submit Form Login
+        $("#form-login-utama").submit(function(e) {
+            e.preventDefault();
+            let kelasVal = $("#input-kelas").val();
+            let nimVal = $("#input-siswa").val();
+            let passwordVal = $("#input-password").val();
+            let namaVal = $("#input-siswa option:selected").text();
+
+            if (!kelasVal || !nimVal || !passwordVal) {
+                alert("Mohon isi semua data beserta password!");
+                return;
+            }
+
+            $("#proses-loader").css("display", "flex");
+            $("#loader-text").text("Memverifikasi & Menyimpan Akun...");
+
+            $.ajax({
+                url: URL_DATABASE,
+                type: "GET",
+                data: {
+                    action: "login",
+                    kelas: kelasVal,
+                    nim: nimVal,
+                    password: passwordVal
+                },
+                dataType: "json",
+                success: function(res) {
+                    $("#proses-loader").hide();
+                    if (res && res.status === "success") {
+                        // Simpan akun ke HP siswa secara permanen
+                        localStorage.setItem("user_sholat", JSON.stringify(res.siswa));
+                        alert(res.message);
+                        window.location.href = "sholat.html";
+                    } else {
+                        alert(res.message);
+                    }
+                },
+                error: function() {
+                    $("#proses-loader").hide();
+                    alert("Koneksi gagal. Silakan coba lagi.");
+                }
+            });
         });
     });
 
-    $("#form-login").submit(function(e) {
-        e.preventDefault();
-        let kelas = $("#select-kelas").val();
-        let nim = $("#select-siswa").val();
-        let password = $("#input-password").val();
+    // Fungsi tombol Masuk Jurnal Langsung
+    function masukLangsung() {
+        window.location.href = "sholat.html";
+    }
 
-        $("#btn-submit").prop("disabled", true);
-        $("#loader").show();
-
-        $.ajax({
-            url: URL_DATABASE,
-            type: "GET",
-            data: { action: "login", kelas: kelas, nim: nim, password: password },
-            dataType: "json",
-            success: function(res) {
-                $("#btn-submit").prop("disabled", false);
-                $("#loader").hide();
-
-                if (res && res.status === "success") {
-                    let sesiUser = { 
-                        kelas: res.siswa.kelas, 
-                        nim: res.siswa.nim, 
-                        nama: res.siswa.nama,
-                        jk: res.siswa.jk
-                    };
-                    localStorage.setItem("user_sholat", JSON.stringify(sesiUser));
-                    window.location.href = "sholat.html";
-                } else {
-                    alert("Verifikasi Gagal: " + (res.message || "Password salah"));
-                }
-            },
-            error: function() {
-                $("#btn-submit").prop("disabled", false);
-                $("#loader").hide();
-                alert("Koneksi server bermasalah.");
-            }
-        });
-    });
+    // Fungsi ganti akun jika ingin login ulang
+    function gantiAkun() {
+        if(confirm("Apakah Anda yakin ingin keluar dan menggunakan akun lain?")) {
+            localStorage.removeItem("user_sholat");
+            $("#panel-auto-login").hide();
+            $("#form-login-utama").show();
+            $("#input-kelas").val("");
+            $("#input-password").val("");
+            $("#input-siswa").html('<option value="">-- Pilih Nama Anda --</option>').prop("disabled", true);
+        }
+    }
 </script>
 </body>
 </html>
