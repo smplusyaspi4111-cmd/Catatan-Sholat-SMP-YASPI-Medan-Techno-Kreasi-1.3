@@ -22,7 +22,6 @@
         .sholat-title { font-weight: bold; font-size: 17px; color: var(--primary); }
         .sholat-status { font-size: 12px; padding: 4px 10px; background: #e9ecef; border-radius: 20px; color: #666; font-weight: bold; }
         
-        /* Grid Penyelarasan Tombol & Rentang Waktu Sesuai Gambar */
         .opsi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
         .kolom-tombol { display: flex; flex-direction: column; align-items: center; }
         
@@ -36,7 +35,6 @@
         .btn-opsi:hover:not(:disabled) { opacity: 0.85; transform: scale(1.02); }
         .btn-opsi:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         
-        /* Gaya Teks Jam Kecil Di Bawah Kotak Tombol */
         .txt-rentang-jam { font-size: 11px; font-weight: bold; color: #333; margin-top: 6px; text-align: center; white-space: nowrap; }
         
         .loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; justify-content: center; align-items: center; color: white; flex-direction: column; font-size: 14px; }
@@ -64,7 +62,6 @@
 </div>
 
 <script>
-    // MASUKKAN URL APP SCRIPT BARU BAPAK DI SINI
     const URL_DATABASE = "https://script.google.com/macros/s/AKfycbxp5--kcFxG519l-XvIUULN8A_mXkqGk-0estP6x_ylMAti1q0KwPymlpzI4m4HlQfE/exec"; 
     let userSesi = JSON.parse(localStorage.getItem("user_sholat"));
 
@@ -76,7 +73,6 @@
         $("#prof-kelas").text("Kelas " + userSesi.kelas);
         $("#prof-tanggal").text(new Intl.DateTimeFormat('id-ID', { dateStyle: 'full' }).format(new Date()));
 
-        // Ambil data status + jadwal realtime imsakiyah Medan harian
         muatDataJurnalDanJadwal();
     });
 
@@ -108,13 +104,18 @@
         let htmlCard = "";
         let jkSiswa = userSesi.jk ? String(userSesi.jk).toUpperCase().trim() : "";
 
-        // Siapkan batas akhir per masing-masing sholat (menggunakan waktu berikutnya)
+        // PERBAIKAN FIQIH: Kurangi 10 menit dari waktu Subuh besok untuk batas akhir Isya
+        let subuhMenit = koverJamKeMenit(jadwal.Subuh);
+        let batasIsyaMenit = subuhMenit - 10;
+        if (batasIsyaMenit < 0) { batasIsyaMenit += 1440; } // Antisipasi putaran waktu
+        let jamAkhirIsyaFikih = konversiMenitKeJamStr(batasIsyaMenit);
+
         const batasWaktu = {
             "Subuh": jadwal.Syuruk,
             "Zuhur": jadwal.Asar,
             "Asar": jadwal.Magrib,
             "Magrib": jadwal.Isya,
-            "Isya": "23:59"
+            "Isya": jamAkhirIsyaFikih
         };
 
         const daftarWaktu = ["Subuh", "Zuhur", "Asar", "Magrib", "Isya"];
@@ -123,7 +124,6 @@
             let jamMulai = jadwal[sNama];
             let jamAkhir = batasWaktu[sNama];
 
-            // LOGIKA PEMBAGIAN 1/3 FIQIH REALTIME
             let rentang = hitungPembagianWaktuTiga(jamMulai, jamAkhir);
 
             let tombolKiriHtml = "";
@@ -140,26 +140,22 @@
                         <span class="sholat-status" id="status-${sNama}">Belum Diisi</span>
                     </div>
                     <div class="opsi-grid">
-                        <!-- KOLOM 1: UZUR / BERJAMAAH -->
                         <div class="kolom-tombol">
                             ${tombolKiriHtml}
                         </div>
                         
-                        <!-- KOLOM 2: AWAL WAKTU -->
                         <div class="kolom-tombol">
                             <button class="btn-opsi btn-awal btn-aksi-${sNama}" onclick="simpanSholat('${sNama}', 'Awal Waktu', this)">Awal Waktu<br><small>Poin 15</small></button>
                             <div class="txt-rentang-jam">(${rentang.awalStart} - ${rentang.awalEnd})</div>
                         </div>
                         
-                        <!-- KOLOM 3: PERTENGAHAN -->
                         <div class="kolom-tombol">
                             <button class="btn-opsi btn-pertengahan btn-aksi-${sNama}" onclick="simpanSholat('${sNama}', 'Pertengahan Waktu', this)">Pertengahan<br><small>Poin 10</small></button>
                             <div class="txt-rentang-jam">(${rentang.tengahStart} - ${rentang.tengahEnd})</div>
                         </div>
                         
-                        <!-- KOLOM 4: AKHIR WAKTU -->
                         <div class="kolom-tombol">
-                            <button class="btn-opsi btn-akhir btn-aksi-${sNama}" onclick="simpanSholat('${sNama}', 'Akhir Waktu', this)">Poin 5</button>
+                            <button class="btn-opsi btn-akhir btn-aksi-${sNama}" onclick="simpanSholat('${sNama}', 'Akhir Waktu', this)">Akhir Waktu<br><small>Poin 5</small></button>
                             <div class="txt-rentang-jam">(${rentang.akhirStart} - ${rentang.akhirEnd})</div>
                         </div>
                     </div>
@@ -169,7 +165,6 @@
 
         $("#daftar-sholat").html(htmlCard);
 
-        // Kunci tombol permanen jika di Google Sheets sudah terisi poin
         daftarWaktu.forEach(sNama => {
             let nilaiCell = String(dataJurnal[sNama]).trim();
             if (nilaiCell !== "" && nilaiCell !== "undefined" && nilaiCell !== "null") {
@@ -187,13 +182,12 @@
         });
     }
 
-    // Fungsi pembagi durasi menit menjadi 3 wilayah yang sama besar
     function hitungPembagianWaktuTiga(startStr, endStr) {
-        let sArr = startStr.split(":");
-        let eArr = endStr.split(":");
+        let menitStart = koverJamKeMenit(startStr);
+        let menitEnd = koverJamKeMenit(endStr);
         
-        let menitStart = parseInt(sArr[0]) * 60 + parseInt(sArr[1]);
-        let menitEnd = parseInt(eArr[0]) * 60 + parseInt(eArr[1]);
+        // Handling jika waktu melewati tengah malam (khusus Isya)
+        if (menitEnd < menitStart) { menitEnd += 1440; }
         
         let totalDurasi = menitEnd - menitStart;
         let sepertiga = Math.floor(totalDurasi / 3);
@@ -207,8 +201,13 @@
             tengahStart: konversiMenitKeJamStr(mAwalEnd),
             tengahEnd: konversiMenitKeJamStr(mTengahEnd),
             akhirStart: konversiMenitKeJamStr(mTengahEnd),
-            akhirEnd: endStr
+            akhirEnd: konversiMenitKeJamStr(menitEnd)
         };
+    }
+
+    function koverJamKeMenit(jamStr) {
+        let arr = jamStr.split(":");
+        return parseInt(arr[0]) * 60 + parseInt(arr[1]);
     }
 
     function konversiMenitKeJamStr(totalMenit) {
