@@ -108,7 +108,6 @@
         });
     }
 
-    // PERBAIKAN: Memaksa pencarian karakter suara perempuan (female) agar terdengar santun & jelas
     function bunyikanSuaraInstruksi(teks) {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel(); 
@@ -116,26 +115,20 @@
             setTimeout(function() {
                 let ucapan = new SpeechSynthesisUtterance(teks);
                 ucapan.lang = 'id-ID';
-                ucapan.pitch = 1.1; // Sedikit dinaikkan agar suaranya lebih jernih/lembut khas perempuan
-                ucapan.rate = 0.85; // Sedikit diperlambat agar pengejaan kata "sholawat" terdengar fasih
+                ucapan.pitch = 1.1; 
+                ucapan.rate = 0.9; 
 
                 let daftarSuara = window.speechSynthesis.getVoices();
-                
-                // Strategi pencarian berlapis: Cari suara perempuan Google ID, jika tidak ada cari suara wanita Microsoft (Gadis/Andika)
                 let suaraPerempuan = daftarSuara.find(voice => 
                     (voice.lang.includes('id-ID') || voice.lang.includes('id_ID')) && 
                     (voice.name.toLowerCase().includes('google') || voice.name.toLowerCase().includes('gadis') || voice.name.toLowerCase().includes('zira') || voice.name.toLowerCase().includes('female'))
                 );
                 
-                // Jika pencarian spesifik wanita gagal, pakai suara Indonesia apa saja yang tersedia di sistem laptop
                 if (!suaraPerempuan) {
                     suaraPerempuan = daftarSuara.find(voice => voice.lang.includes('id-ID') || voice.lang.includes('id_ID'));
                 }
                 
-                if (suaraPerempuan) {
-                    ucapan.voice = suaraPerempuan;
-                }
-                
+                if (suaraPerempuan) { ucapan.voice = suaraPerempuan; }
                 window.speechSynthesis.speak(ucapan);
             }, 60); 
         }
@@ -146,7 +139,7 @@
         let jkSiswa = userSesi.jk ? String(userSesi.jk).toUpperCase().trim() : "";
 
         let sekarang = new Date();
-        let jamSekarangMenit = sekarang.getHours() * 60 + sekarang.getMinutes();
+        let jamSekarangMenit = Bird = sekarang.getHours() * 60 + sekarang.getMinutes();
 
         let subuhMenit = koverJamKeMenit(jadwal.Subuh);
         let batasIsyaMenit = subuhMenit - 10;
@@ -187,7 +180,8 @@
 
             let tombolKiriHtml = "";
             if (jkSiswa === "P" || jkSiswa === "PEREMPUAN") {
-                tombolKiriHtml = `<button class="btn-opsi btn-uzur btn-aksi-${sNama}" ${!sudahMasukWaktu ? 'disabled' : ''} onclick="bunyikanSuaraInstruksi('Silakan sholawat dulu empat kali ya nak.'); simpanSholat('${sNama}', 'Uzur / Haid', this);">Uzur/Haid<br><small>Poin 20</small></button>`;
+                // DIUBAH: Kata-kata diperpendek sesuai request Bapak
+                tombolKiriHtml = `<button class="btn-opsi btn-uzur btn-aksi-${sNama}" ${!sudahMasukWaktu ? 'disabled' : ''} onclick="bunyikanSuaraInstruksi('Sholawat dulu ya'); simpanSholat('${sNama}', 'Uzur / Haid', this);">Uzur/Haid<br><small>Poin 20</small></button>`;
             } else {
                 tombolKiriHtml = `<button class="btn-opsi btn-jamaah btn-aksi-${sNama}" ${!sudahMasukWaktu ? 'disabled' : ''} onclick="simpanSholat('${sNama}', 'Berjamaah', this)">Berjamaah<br><small>Poin 20</small></button>`;
             }
@@ -248,22 +242,15 @@
     function hitungPembagianWaktuTiga(startStr, endStr) {
         let menitStart = koverJamKeMenit(startStr);
         let menitEnd = koverJamKeMenit(endStr);
-        
         if (menitEnd < menitStart) { menitEnd += 1440; }
-        
         let totalDurasi = menitEnd - menitStart;
         let sepertiga = Math.floor(totalDurasi / 3);
-
         let mAwalEnd = menitStart + sepertiga;
         let mTengahEnd = mAwalEnd + sepertiga;
-
         return {
-            awalStart: startStr,
-            awalEnd: konversiMenitKeJamStr(mAwalEnd),
-            tengahStart: konversiMenitKeJamStr(mAwalEnd),
-            tengahEnd: konversiMenitKeJamStr(mTengahEnd),
-            akhirStart: konversiMenitKeJamStr(mTengahEnd),
-            akhirEnd: konversiMenitKeJamStr(menitEnd)
+            awalStart: startStr,awalEnd: konversiMenitKeJamStr(mAwalEnd),
+            tengahStart: konversiMenitKeJamStr(mAwalEnd),tengahEnd: konversiMenitKeJamStr(mTengahEnd),
+            akhirStart: konversiMenitKeJamStr(mTengahEnd),akhirEnd: konversiMenitKeJamStr(menitEnd)
         };
     }
 
@@ -298,7 +285,6 @@
                     if (statusPilihan === 'Uzur / Haid') {
                         pesanAlert += `\n\nSebagai gantinya Kamu harus Sholawat 4 kali\n{Allahumma sholli 'ala Saidina Muhammad 4 x}`;
                     }
-                    
                     alert(pesanAlert);
                 } else {
                     alert("Gagal: " + res.message);
