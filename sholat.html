@@ -27,8 +27,8 @@
         .btn-uzur { background: #6c757d; }
         .btn-jamaah { background: #0d6efd; }
         .btn-awal { background: #198754; }
-        .btn-pertengahan { background: #ffc107; color: #212529; }
-        .btn-akhir { background: #dc3545; }
+        .btn-akhir { background: #ffc107; color: #212529; }
+        .btn-lambat { background: #dc3545; }
         .btn-opsi:hover:not(:disabled) { opacity: 0.85; transform: scale(1.02); }
         .btn-opsi:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
         .loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; justify-content: center; align-items: center; color: white; flex-direction: column; font-size: 14px; }
@@ -52,7 +52,7 @@
 
 <div class="loading-overlay" id="saving-loader">
     <i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom: 10px;"></i>
-    <span>Menyimpan ke Google Sheets...</span>
+    <span id="loader-text">Menyimpan ke Google Sheets...</span>
 </div>
 
 <script>
@@ -71,6 +71,7 @@
         let hariFormat = new Intl.DateTimeFormat('id-ID', { dateStyle: 'full' }).format(new Date());
         $("#prof-tanggal").text(hariFormat);
 
+        // Render dlu tombol kosongnya baru divalidasi ke database
         renderKartuSholat();
     });
 
@@ -84,17 +85,10 @@
 
     function renderKartuSholat() {
         let htmlCard = "";
-        
-        // PENGAMAN UTAMA: Cek data Jenis Kelamin agar tidak memicu crash layar putih kosong
-        let jkSiswa = "";
-        if (userSesi && userSesi.jk) {
-            jkSiswa = String(userSesi.jk).toUpperCase().trim();
-        }
+        let jkSiswa = (userSesi && userSesi.jk) ? String(userSesi.jk).toUpperCase().trim() : "";
 
         listSholat.forEach(s => {
             let tombolKiriHtml = "";
-            
-            // Aturan penentuan tombol Berjamaah (L) atau Uzur/Haid (P)
             if (jkSiswa === "P" || jkSiswa === "PEREMPUAN") {
                 tombolKiriHtml = `<button class="btn-opsi btn-uzur btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Uzur / Haid', this)">Uzur/Haid<br><small>Poin 20</small></button>`;
             } else {
@@ -113,13 +107,61 @@
                     <div class="opsi-grid">
                         ${tombolKiriHtml}
                         <button class="btn-opsi btn-awal btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Awal Waktu', this)">Awal Waktu<br><small>Poin 15</small></button>
-                        <button class="btn-opsi btn-pertengahan btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Pertengahan Waktu', this)">Akhir Waktu<br><small>Poin 10</small></button>
-                        <button class="btn-opsi btn-akhir btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Akhir', this)">Terlambat<br><small>Poin 5</small></button>
+                        <button class="btn-opsi btn-akhir btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Akhir Waktu', this)">Akhir Waktu<br><small>Poin 10</small></button>
+                        <button class="btn-opsi btn-lambat btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Terlambat', this)">Terlambat<br><small>Poin 5</small></button>
                     </div>
                 </div>
             `;
         });
         $("#daftar-sholat").html(htmlCard);
+        
+        // PANGGIL FITUR DETEKSI PERMANEN DARI GOOGLE SHEET SETELAH TOMBOL DI-RENDER
+        proteksiTombolRealtime();
+    }
+
+    function proteksiTombolRealtime() {
+        $("#saving-loader").css("display", "flex");
+        $("#loader-text").text("Mengecek database jurnal hari ini...");
+
+        $.ajax({
+            url: URL_DATABASE,
+            type: "GET",
+            data: {
+                action: "cekStatusSholat",
+                kelas: userSesi.kelas,
+                nim: userSesi.nim
+            },
+            dataType: "json",
+            success: function(res) {
+                $("#saving-loader").hide();
+                $("#loader-text").text("Menyimpan ke Google Sheets...");
+                
+                if (res && res.status === "success" && res.data) {
+                    // Terjemahkan nilai poin kembali menjadi teks status agar informatif
+                    listSholat.forEach(s => {
+                        let nilaiCell = String(res.data[s.nama]).trim();
+                        if (nilaiCell !== "") {
+                            let teksStatus = "Sudah Diisi";
+                            if (nilaiCell == "20") {
+                                let jk = (userSesi && userSesi.jk) ? String(userSesi.jk).toUpperCase().trim() : "";
+                                teksStatus = (jk === "P" || jk === "PEREMPUAN") ? "Uzur / Haid" : "Berjamaah";
+                            }
+                            else if (nilaiCell == "15") teksStatus = "Awal Waktu";
+                            else if (nilaiCell == "10") teksStatus = "Akhir Waktu";
+                            else if (nilaiCell == "5") teksStatus = "Terlambat";
+
+                            // Kunci tombolnya dan nyalakan status hijau pekat!
+                            $(`#status-${s.nama}`).text(teksStatus).css({"background":"#198754","color":"white"});
+                            $(`.btn-aksi-${s.nama}`).prop("disabled", true);
+                        }
+                    });
+                }
+            },
+            error: function() {
+                $("#saving-loader").hide();
+                console.log("Gagal sinkronisasi proteksi harian harian.");
+            }
+        });
     }
 
     function simpanSholat(sholatNama, statusPilihan, elemenTombol) {
@@ -140,9 +182,7 @@
                 $("#saving-loader").hide();
                 if (res && res.status === "success") {
                     let teksTampil = statusPilihan;
-                    if($(elemenTombol).hasClass('btn-jamaah')) {
-                        teksTampil = "Berjamaah";
-                    }
+                    if($(elemenTombol).hasClass('btn-jamaah')) { teksTampil = "Berjamaah"; }
                     $(`#status-${sholatNama}`).text(teksTampil).css({"background":"#198754","color":"white"});
                     $(`.btn-aksi-${sholatNama}`).prop("disabled", true);
                     alert(`Berhasil menyimpan data sholat ${sholatNama}!`);
