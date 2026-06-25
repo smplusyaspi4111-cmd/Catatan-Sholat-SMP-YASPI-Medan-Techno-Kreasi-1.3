@@ -74,7 +74,6 @@
         $("#prof-kelas").text("Kelas " + userSesi.kelas);
         $("#prof-tanggal").text(new Intl.DateTimeFormat('id-ID', { dateStyle: 'full' }).format(new Date()));
 
-        // Paksa browser desktop memuat daftar suara di awal loading halaman
         if ('speechSynthesis' in window) {
             window.speechSynthesis.getVoices();
             if (window.speechSynthesis.onvoiceschanged !== undefined) {
@@ -109,27 +108,36 @@
         });
     }
 
-    // PERBAIKAN STABILITAS AUDIO: Deteksi mendalam paket bahasa Indonesia pada sistem operasi
+    // PERBAIKAN: Memaksa pencarian karakter suara perempuan (female) agar terdengar santun & jelas
     function bunyikanSuaraInstruksi(teks) {
         if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel(); // Reset paksa engine audio browser
+            window.speechSynthesis.cancel(); 
 
             setTimeout(function() {
                 let ucapan = new SpeechSynthesisUtterance(teks);
                 ucapan.lang = 'id-ID';
-                ucapan.pitch = 1.0;
-                ucapan.rate = 0.9;
+                ucapan.pitch = 1.1; // Sedikit dinaikkan agar suaranya lebih jernih/lembut khas perempuan
+                ucapan.rate = 0.85; // Sedikit diperlambat agar pengejaan kata "sholawat" terdengar fasih
 
-                // Cari kecocokan database suara Indonesia di dalam Laptop/HP
                 let daftarSuara = window.speechSynthesis.getVoices();
-                let suaraIndo = daftarSuara.find(voice => voice.lang.includes('id-ID') || voice.lang.includes('id_ID'));
                 
-                if (suaraIndo) {
-                    ucapan.voice = suaraIndo;
+                // Strategi pencarian berlapis: Cari suara perempuan Google ID, jika tidak ada cari suara wanita Microsoft (Gadis/Andika)
+                let suaraPerempuan = daftarSuara.find(voice => 
+                    (voice.lang.includes('id-ID') || voice.lang.includes('id_ID')) && 
+                    (voice.name.toLowerCase().includes('google') || voice.name.toLowerCase().includes('gadis') || voice.name.toLowerCase().includes('zira') || voice.name.toLowerCase().includes('female'))
+                );
+                
+                // Jika pencarian spesifik wanita gagal, pakai suara Indonesia apa saja yang tersedia di sistem laptop
+                if (!suaraPerempuan) {
+                    suaraPerempuan = daftarSuara.find(voice => voice.lang.includes('id-ID') || voice.lang.includes('id_ID'));
+                }
+                
+                if (suaraPerempuan) {
+                    ucapan.voice = suaraPerempuan;
                 }
                 
                 window.speechSynthesis.speak(ucapan);
-            }, 50); // Delay mikro 50ms untuk memastikan memori audio siap melafalkan teks
+            }, 60); 
         }
     }
 
