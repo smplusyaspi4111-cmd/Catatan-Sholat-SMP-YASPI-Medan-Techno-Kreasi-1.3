@@ -9,28 +9,36 @@
     <style>
         :root { --primary: #0f5132; --secondary: #198754; --bg: #f8f9fa; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
-        body { background-color: #f1f3f5; padding-bottom: 30px; }
+        body { background-color: #f1f3f5; padding-bottom: 40px; }
         .header-panel { background: var(--primary); color: white; padding: 20px; text-align: center; position: relative; }
         .btn-keluar { position: absolute; right: 15px; top: 20px; background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 12px; }
-        .profil-card { background: white; max-width: 600px; margin: -15px auto 15px; border-radius: 10px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 92%; border-left: 5px solid var(--secondary); }
+        .profil-card { background: white; max-width: 650px; margin: -15px auto 15px; border-radius: 10px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 92%; border-left: 5px solid var(--secondary); }
         .profil-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }
         .profil-label { color: #666; }
         .profil-value { font-weight: bold; color: #333; }
-        .sholat-container { max-width: 600px; margin: 0 auto; width: 92%; }
+        .sholat-container { max-width: 650px; margin: 0 auto; width: 92%; }
         .sholat-card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .sholat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 5px; border-bottom: 1px solid #eee; }
-        .sholat-title { font-weight: bold; font-size: 16px; color: var(--primary); }
-        .sholat-time { font-size: 11px; color: #888; }
-        .sholat-status { font-size: 12px; padding: 3px 8px; background: #e9ecef; border-radius: 20px; color: #666; font-weight: bold; }
-        .opsi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .btn-opsi { border: none; padding: 10px 5px; border-radius: 8px; color: white; font-size: 11px; font-weight: bold; cursor: pointer; text-align: center; transition: 0.2s; }
-        .btn-uzur { background: #6c757d; }
-        .btn-jamaah { background: #0d6efd; }
-        .btn-awal { background: #198754; }
-        .btn-akhir { background: #ffc107; color: #212529; }
-        .btn-lambat { background: #dc3545; }
+        .sholat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 1px solid #eee; }
+        .sholat-title { font-weight: bold; font-size: 17px; color: var(--primary); }
+        .sholat-status { font-size: 12px; padding: 4px 10px; background: #e9ecef; border-radius: 20px; color: #666; font-weight: bold; }
+        
+        /* Grid Penyelarasan Tombol & Rentang Waktu Sesuai Gambar */
+        .opsi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .kolom-tombol { display: flex; flex-direction: column; align-items: center; }
+        
+        .btn-opsi { width: 100%; border: none; padding: 12px 5px; border-radius: 8px; color: white; font-size: 12px; font-weight: bold; cursor: pointer; text-align: center; transition: 0.2s; min-height: 52px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .btn-uzur { background: #b2b7bc; color: #ffffff; }
+        .btn-jamaah { background: #0d6efd; color: #ffffff; }
+        .btn-awal { background: #a3cfbb; color: #155724; }
+        .btn-pertengahan { background: #ffe69c; color: #721c24; }
+        .btn-akhir { background: #f8d7da; color: #721c24; }
+        
         .btn-opsi:hover:not(:disabled) { opacity: 0.85; transform: scale(1.02); }
-        .btn-opsi:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .btn-opsi:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        
+        /* Gaya Teks Jam Kecil Di Bawah Kotak Tombol */
+        .txt-rentang-jam { font-size: 11px; font-weight: bold; color: #333; margin-top: 6px; text-align: center; white-space: nowrap; }
+        
         .loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; justify-content: center; align-items: center; color: white; flex-direction: column; font-size: 14px; }
     </style>
 </head>
@@ -52,147 +60,185 @@
 
 <div class="loading-overlay" id="saving-loader">
     <i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom: 10px;"></i>
-    <span id="loader-text">Menyimpan ke Google Sheets...</span>
+    <span id="loader-text">Menghubungkan ke server pusat...</span>
 </div>
 
 <script>
+    // MASUKKAN URL APP SCRIPT BARU BAPAK DI SINI
     const URL_DATABASE = "https://script.google.com/macros/s/AKfycbxp5--kcFxG519l-XvIUULN8A_mXkqGk-0estP6x_ylMAti1q0KwPymlpzI4m4HlQfE/exec"; 
     let userSesi = JSON.parse(localStorage.getItem("user_sholat"));
 
-    if (!userSesi) {
-        window.location.href = "index.html";
-    }
+    if (!userSesi) { window.location.href = "index.html"; }
 
     $(document).ready(function() {
         $("#prof-nama").text(userSesi.nama);
         $("#prof-nim").text(userSesi.nim);
         $("#prof-kelas").text("Kelas " + userSesi.kelas);
-        
-        let hariFormat = new Intl.DateTimeFormat('id-ID', { dateStyle: 'full' }).format(new Date());
-        $("#prof-tanggal").text(hariFormat);
+        $("#prof-tanggal").text(new Intl.DateTimeFormat('id-ID', { dateStyle: 'full' }).format(new Date()));
 
-        // Render dlu tombol kosongnya baru divalidasi ke database
-        renderKartuSholat();
+        // Ambil data status + jadwal realtime imsakiyah Medan harian
+        muatDataJurnalDanJadwal();
     });
 
-    const listSholat = [
-        { nama: "Subuh", jam: "05.00 - 06.00" },
-        { nama: "Zuhur", jam: "12.30 - 15.00" },
-        { nama: "Asar", jam: "15.45 - 18.00" },
-        { nama: "Magrib", jam: "18.45 - 19.45" },
-        { nama: "Isya", jam: "20.00 - 23.00" }
-    ];
+    function muatDataJurnalDanJadwal() {
+        $("#saving-loader").css("display", "flex");
+        $("#loader-text").text("Mengecek database & jadwal Medan realtime...");
 
-    function renderKartuSholat() {
+        $.ajax({
+            url: URL_DATABASE,
+            type: "GET",
+            data: { action: "cekStatusSholat", kelas: userSesi.kelas, nim: userSesi.nim },
+            dataType: "json",
+            success: function(res) {
+                $("#saving-loader").hide();
+                if (res && res.status === "success") {
+                    prosesRenderHalaman(res.jadwal, res.data);
+                } else {
+                    alert("Gagal memuat jadwal terupdate.");
+                }
+            },
+            error: function() {
+                $("#saving-loader").hide();
+                alert("Gangguan jaringan. Sinkronisasi gagal.");
+            }
+        });
+    }
+
+    function prosesRenderHalaman(jadwal, dataJurnal) {
         let htmlCard = "";
-        let jkSiswa = (userSesi && userSesi.jk) ? String(userSesi.jk).toUpperCase().trim() : "";
+        let jkSiswa = userSesi.jk ? String(userSesi.jk).toUpperCase().trim() : "";
 
-        listSholat.forEach(s => {
+        // Siapkan batas akhir per masing-masing sholat (menggunakan waktu berikutnya)
+        const batasWaktu = {
+            "Subuh": jadwal.Syuruk,
+            "Zuhur": jadwal.Asar,
+            "Asar": jadwal.Magrib,
+            "Magrib": jadwal.Isya,
+            "Isya": "23:59"
+        };
+
+        const daftarWaktu = ["Subuh", "Zuhur", "Asar", "Magrib", "Isya"];
+
+        daftarWaktu.forEach(sNama => {
+            let jamMulai = jadwal[sNama];
+            let jamAkhir = batasWaktu[sNama];
+
+            // LOGIKA PEMBAGIAN 1/3 FIQIH REALTIME
+            let rentang = hitungPembagianWaktuTiga(jamMulai, jamAkhir);
+
             let tombolKiriHtml = "";
             if (jkSiswa === "P" || jkSiswa === "PEREMPUAN") {
-                tombolKiriHtml = `<button class="btn-opsi btn-uzur btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Uzur / Haid', this)">Uzur/Haid<br><small>Poin 20</small></button>`;
+                tombolKiriHtml = `<button class="btn-opsi btn-uzur btn-aksi-${sNama}" onclick="simpanSholat('${sNama}', 'Uzur / Haid', this)">Uzur/Haid<br><small>Poin 20</small></button>`;
             } else {
-                tombolKiriHtml = `<button class="btn-opsi btn-jamaah btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Berjamaah', this)">Berjamaah<br><small>Poin 20</small></button>`;
+                tombolKiriHtml = `<button class="btn-opsi btn-jamaah btn-aksi-${sNama}" onclick="simpanSholat('${sNama}', 'Berjamaah', this)">Berjamaah<br><small>Poin 20</small></button>`;
             }
 
             htmlCard += `
                 <div class="sholat-card">
                     <div class="sholat-header">
-                        <div>
-                            <span class="sholat-title">${s.nama}</span>
-                            <span class="sholat-time">(${s.jam})</span>
-                        </div>
-                        <span class="sholat-status" id="status-${s.nama}">Belum Diisi</span>
+                        <span class="sholat-title">${sNama} <span style="font-weight:normal; margin-left:5px; color:#555;">${jamMulai}</span></span>
+                        <span class="sholat-status" id="status-${sNama}">Belum Diisi</span>
                     </div>
                     <div class="opsi-grid">
-                        ${tombolKiriHtml}
-                        <button class="btn-opsi btn-awal btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Awal Waktu', this)">Awal Waktu<br><small>Poin 15</small></button>
-                        <button class="btn-opsi btn-akhir btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Akhir Waktu', this)">Akhir Waktu<br><small>Poin 10</small></button>
-                        <button class="btn-opsi btn-lambat btn-aksi-${s.nama}" onclick="simpanSholat('${s.nama}', 'Terlambat', this)">Terlambat<br><small>Poin 5</small></button>
+                        <!-- KOLOM 1: UZUR / BERJAMAAH -->
+                        <div class="kolom-tombol">
+                            ${tombolKiriHtml}
+                        </div>
+                        
+                        <!-- KOLOM 2: AWAL WAKTU -->
+                        <div class="kolom-tombol">
+                            <button class="btn-opsi btn-awal btn-aksi-${sNama}" onclick="simpanSholat('${sNama}', 'Awal Waktu', this)">Awal Waktu<br><small>Poin 15</small></button>
+                            <div class="txt-rentang-jam">(${rentang.awalStart} - ${rentang.awalEnd})</div>
+                        </div>
+                        
+                        <!-- KOLOM 3: PERTENGAHAN -->
+                        <div class="kolom-tombol">
+                            <button class="btn-opsi btn-pertengahan btn-aksi-${sNama}" onclick="simpanSholat('${sNama}', 'Pertengahan Waktu', this)">Pertengahan<br><small>Poin 10</small></button>
+                            <div class="txt-rentang-jam">(${rentang.tengahStart} - ${rentang.tengahEnd})</div>
+                        </div>
+                        
+                        <!-- KOLOM 4: AKHIR WAKTU -->
+                        <div class="kolom-tombol">
+                            <button class="btn-opsi btn-akhir btn-aksi-${sNama}" onclick="simpanSholat('${sNama}', 'Akhir Waktu', this)">Poin 5</button>
+                            <div class="txt-rentang-jam">(${rentang.akhirStart} - ${rentang.akhirEnd})</div>
+                        </div>
                     </div>
                 </div>
             `;
         });
+
         $("#daftar-sholat").html(htmlCard);
-        
-        // PANGGIL FITUR DETEKSI PERMANEN DARI GOOGLE SHEET SETELAH TOMBOL DI-RENDER
-        proteksiTombolRealtime();
-    }
 
-    function proteksiTombolRealtime() {
-        $("#saving-loader").css("display", "flex");
-        $("#loader-text").text("Mengecek database jurnal hari ini...");
-
-        $.ajax({
-            url: URL_DATABASE,
-            type: "GET",
-            data: {
-                action: "cekStatusSholat",
-                kelas: userSesi.kelas,
-                nim: userSesi.nim
-            },
-            dataType: "json",
-            success: function(res) {
-                $("#saving-loader").hide();
-                $("#loader-text").text("Menyimpan ke Google Sheets...");
-                
-                if (res && res.status === "success" && res.data) {
-                    // Terjemahkan nilai poin kembali menjadi teks status agar informatif
-                    listSholat.forEach(s => {
-                        let nilaiCell = String(res.data[s.nama]).trim();
-                        if (nilaiCell !== "") {
-                            let teksStatus = "Sudah Diisi";
-                            if (nilaiCell == "20") {
-                                let jk = (userSesi && userSesi.jk) ? String(userSesi.jk).toUpperCase().trim() : "";
-                                teksStatus = (jk === "P" || jk === "PEREMPUAN") ? "Uzur / Haid" : "Berjamaah";
-                            }
-                            else if (nilaiCell == "15") teksStatus = "Awal Waktu";
-                            else if (nilaiCell == "10") teksStatus = "Akhir Waktu";
-                            else if (nilaiCell == "5") teksStatus = "Terlambat";
-
-                            // Kunci tombolnya dan nyalakan status hijau pekat!
-                            $(`#status-${s.nama}`).text(teksStatus).css({"background":"#198754","color":"white"});
-                            $(`.btn-aksi-${s.nama}`).prop("disabled", true);
-                        }
-                    });
+        // Kunci tombol permanen jika di Google Sheets sudah terisi poin
+        daftarWaktu.forEach(sNama => {
+            let nilaiCell = String(dataJurnal[sNama]).trim();
+            if (nilaiCell !== "" && nilaiCell !== "undefined" && nilaiCell !== "null") {
+                let teksStatus = "Sudah Diisi";
+                if (nilaiCell == "20") {
+                    teksStatus = (jkSiswa === "P" || jkSiswa === "PEREMPUAN") ? "Uzur / Haid" : "Berjamaah";
                 }
-            },
-            error: function() {
-                $("#saving-loader").hide();
-                console.log("Gagal sinkronisasi proteksi harian harian.");
+                else if (nilaiCell == "15") teksStatus = "Awal Waktu";
+                else if (nilaiCell == "10") teksStatus = "Pertengahan Waktu";
+                else if (nilaiCell == "5") teksStatus = "Akhir Waktu";
+
+                $(`#status-${sNama}`).text(teksStatus).css({"background":"#198754","color":"white"});
+                $(`.btn-aksi-${sNama}`).prop("disabled", true);
             }
         });
     }
 
+    // Fungsi pembagi durasi menit menjadi 3 wilayah yang sama besar
+    function hitungPembagianWaktuTiga(startStr, endStr) {
+        let sArr = startStr.split(":");
+        let eArr = endStr.split(":");
+        
+        let menitStart = parseInt(sArr[0]) * 60 + parseInt(sArr[1]);
+        let menitEnd = parseInt(eArr[0]) * 60 + parseInt(eArr[1]);
+        
+        let totalDurasi = menitEnd - menitStart;
+        let sepertiga = Math.floor(totalDurasi / 3);
+
+        let mAwalEnd = menitStart + sepertiga;
+        let mTengahEnd = mAwalEnd + sepertiga;
+
+        return {
+            awalStart: startStr,
+            awalEnd: konversiMenitKeJamStr(mAwalEnd),
+            tengahStart: konversiMenitKeJamStr(mAwalEnd),
+            tengahEnd: konversiMenitKeJamStr(mTengahEnd),
+            akhirStart: konversiMenitKeJamStr(mTengahEnd),
+            akhirEnd: endStr
+        };
+    }
+
+    function konversiMenitKeJamStr(totalMenit) {
+        let jam = Math.floor(totalMenit / 60) % 24;
+        let menit = totalMenit % 60;
+        return (jam < 10 ? "0" : "") + jam + ":" + (menit < 10 ? "0" : "") + menit;
+    }
+
     function simpanSholat(sholatNama, statusPilihan, elemenTombol) {
         $("#saving-loader").css("display", "flex");
+        $("#loader-text").text("Sedang mengunci poin...");
 
         $.ajax({
             url: URL_DATABASE,
             type: "GET",
-            data: {
-                action: "simpanSholat",
-                kelas: userSesi.kelas,
-                nim: userSesi.nim,
-                sholat: sholatNama,
-                status: statusPilihan
-            },
+            data: { action: "simpanSholat", kelas: userSesi.kelas, nim: userSesi.nim, sholat: sholatNama, status: statusPilihan },
             dataType: "json",
             success: function(res) {
                 $("#saving-loader").hide();
                 if (res && res.status === "success") {
-                    let teksTampil = statusPilihan;
-                    if($(elemenTombol).hasClass('btn-jamaah')) { teksTampil = "Berjamaah"; }
-                    $(`#status-${sholatNama}`).text(teksTampil).css({"background":"#198754","color":"white"});
+                    $(`#status-${sholatNama}`).text(statusPilihan).css({"background":"#198754","color":"white"});
                     $(`.btn-aksi-${sholatNama}`).prop("disabled", true);
                     alert(`Berhasil menyimpan data sholat ${sholatNama}!`);
                 } else {
-                    alert("Gagal menyimpan data: " + res.message);
+                    alert("Gagal: " + res.message);
                 }
             },
             error: function() {
                 $("#saving-loader").hide();
-                alert("Gagal menghubungi server. Periksa koneksi internet.");
+                alert("Koneksi gagal.");
             }
         });
     }
